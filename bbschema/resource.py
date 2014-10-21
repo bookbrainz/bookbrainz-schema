@@ -18,7 +18,7 @@
 """This module specifies a class, Resource, which is designed to be used as the
 base class for all resource models specified in this package."""
 
-from sqlalchemy import Column, Integer, String, DateTime, UnicodeText
+from sqlalchemy import Column, Integer, String, DateTime, UnicodeText, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import text
 
@@ -49,3 +49,31 @@ class Resource(Base):
         'polymorphic_identity': 'res',
         'polymorphic_on': _type
     }
+
+class ResourceAlias(Base):
+    """An alias, or alternative name, for some Resource."""
+
+    __tablename__ = 'resource_alias'
+    __table_args__ = {'schema': 'bookbrainz'}
+
+    id = Column(Integer, primary_key=True)
+
+    resource_gid = Column(UUID, ForeignKey('bookbrainz.resource.gid'), nullable=False)
+
+    name = Column(UnicodeText, nullable=False)
+
+
+class ResourceApproval(Base):
+    """This class is used when an Editor approves a particular revision of a
+    resource. It stores the Editor ID and Resource GID. Revision is not stored,
+    because all approvals are cleared when the revision number changes."""
+
+    __tablename__ = 'resource_approval'
+    __table_args__ = {'schema': 'bookbrainz'}
+
+    # Composite primary key on resource_gid and editor_id.
+    resource_gid = Column(UUID(as_uuid=True), ForeignKey('bookbrainz.resource.gid'),
+                          primary_key=True)
+
+    editor_id = Column(Integer, ForeignKey('bookbrainz.editor.id'), primary_key=True)
+
