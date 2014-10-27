@@ -18,7 +18,8 @@
 """This module provides a class, Entity, to represent people or organizations.
 """
 
-from sqlalchemy import Column, Integer, String, DateTime, UnicodeText, ForeignKey
+from sqlalchemy import (Column, Integer, String, DateTime, UnicodeText,
+                        ForeignKey)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import text
 

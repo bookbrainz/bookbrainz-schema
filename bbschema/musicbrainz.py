@@ -30,9 +30,10 @@ The original license for these classes is included in the comment below.
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from sqlalchemy import Column, Integer, String, DateTime, UnicodeText, ForeignKey, SMALLINT, CHAR, Boolean
+from sqlalchemy import (Column, Integer, String, DateTime, UnicodeText,
+                        ForeignKey, SMALLINT, CHAR, Boolean)
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import relationship, composite
+from sqlalchemy.orm import relationship, composite, backref
 from sqlalchemy.dialects.postgresql import UUID
 import sqlalchemy.sql as sql
 
@@ -57,22 +58,29 @@ class Area(Base):
     gid = Column(UUID, nullable=False)
     name = Column(String, nullable=False)
     sort_name = Column(String, nullable=False)
-    type_id = Column('type', Integer, ForeignKey('musicbrainz.area_type.id', name='area_fk_type'))
-    edits_pending = Column(Integer, default=0, server_default=sql.text('0'), nullable=False)
-    last_updated = Column(DateTime(timezone=True), server_default=sql.func.now())
+    type_id = Column('type', Integer, ForeignKey('musicbrainz.area_type.id',
+                     name='area_fk_type'))
+    edits_pending = Column(Integer, default=0, server_default=sql.text('0'),
+                           nullable=False)
+    last_updated = Column(DateTime(timezone=True),
+                          server_default=sql.func.now())
     begin_date_year = Column(SMALLINT)
     begin_date_month = Column(SMALLINT)
     begin_date_day = Column(SMALLINT)
     end_date_year = Column(SMALLINT)
     end_date_month = Column(SMALLINT)
     end_date_day = Column(SMALLINT)
-    ended = Column(Boolean, default=False, server_default=sql.false(), nullable=False)
-    comment = Column(String(255), default='', server_default=sql.text("''"), nullable=False)
+    ended = Column(Boolean, default=False, server_default=sql.false(),
+                   nullable=False)
+    comment = Column(String(255), default='', server_default=sql.text("''"),
+                     nullable=False)
 
     type = relationship('AreaType', foreign_keys=[type_id])
 
-    begin_date = composite(PartialDate, begin_date_year, begin_date_month, begin_date_day)
-    end_date = composite(PartialDate, end_date_year, end_date_month, end_date_day)
+    begin_date = composite(PartialDate, begin_date_year, begin_date_month,
+                           begin_date_day)
+    end_date = composite(PartialDate, end_date_year, end_date_month,
+                         end_date_day)
 
 
 class AreaGIDRedirect(Base):
@@ -80,7 +88,11 @@ class AreaGIDRedirect(Base):
     __table_args__ = {'schema': 'musicbrainz'}
 
     gid = Column(UUID, primary_key=True, nullable=False)
-    redirect_id = Column('new_id', Integer, ForeignKey('musicbrainz.area.id', name='area_gid_redirect_fk_new_id'), nullable=False)
+    redirect_id = Column(
+        'new_id', Integer,
+        ForeignKey('musicbrainz.area.id', name='area_gid_redirect_fk_new_id'),
+        nullable=False
+    )
     created = Column(DateTime(timezone=True), server_default=sql.func.now())
 
     redirect = relationship('Area', foreign_keys=[redirect_id], innerjoin=True)
@@ -107,12 +119,21 @@ class AreaAlias(Base):
     __table_args__ = {'schema': 'musicbrainz'}
 
     id = Column(Integer, primary_key=True)
-    area_id = Column('area', Integer, ForeignKey('musicbrainz.area.id', name='area_alias_fk_area'), nullable=False)
+    area_id = Column(
+        'area', Integer,
+        ForeignKey('musicbrainz.area.id', name='area_alias_fk_area'),
+        nullable=False
+    )
     name = Column(String, nullable=False)
     locale = Column(String)
-    edits_pending = Column(Integer, default=0, server_default=sql.text('0'), nullable=False)
-    last_updated = Column(DateTime(timezone=True), server_default=sql.func.now())
-    type_id = Column('type', Integer, ForeignKey('musicbrainz.area_alias_type.id', name='area_alias_fk_type'))
+    edits_pending = Column(Integer, default=0, server_default=sql.text('0'),
+                           nullable=False)
+    last_updated = Column(DateTime(timezone=True),
+                          server_default=sql.func.now())
+    type_id = Column(
+        'type', Integer,
+        ForeignKey('musicbrainz.area_alias_type.id', name='area_alias_fk_type')
+    )
     sort_name = Column(String, nullable=False)
     begin_date_year = Column(SMALLINT)
     begin_date_month = Column(SMALLINT)
@@ -120,14 +141,71 @@ class AreaAlias(Base):
     end_date_year = Column(SMALLINT)
     end_date_month = Column(SMALLINT)
     end_date_day = Column(SMALLINT)
-    primary_for_locale = Column(Boolean, default=False, server_default=sql.false(), nullable=False)
-    ended = Column(Boolean, default=False, server_default=sql.false(), nullable=False)
+    primary_for_locale = Column(Boolean, default=False,
+                                server_default=sql.false(), nullable=False)
+    ended = Column(Boolean, default=False, server_default=sql.false(),
+                   nullable=False)
 
     area = relationship('Area', foreign_keys=[area_id], innerjoin=True)
     type = relationship('AreaAliasType', foreign_keys=[type_id])
 
-    begin_date = composite(PartialDate, begin_date_year, begin_date_month, begin_date_day)
-    end_date = composite(PartialDate, end_date_year, end_date_month, end_date_day)
+    begin_date = composite(PartialDate, begin_date_year, begin_date_month,
+                           begin_date_day)
+    end_date = composite(PartialDate, end_date_year, end_date_month,
+                         end_date_day)
+
+
+class Gender(Base):
+    __tablename__ = 'gender'
+    __table_args__ = {'schema': 'musicbrainz'}
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String(255), nullable=False)
+
+
+class ISO31661(Base):
+    __tablename__ = 'iso_3166_1'
+    __table_args__ = {'schema': 'musicbrainz'}
+
+    area_id = Column(
+        'area', Integer,
+        ForeignKey('musicbrainz.area.id', name='iso_3166_1_fk_area'),
+        nullable=False
+    )
+    code = Column(CHAR(2), primary_key=True)
+
+    area = relationship('Area', foreign_keys=[area_id], innerjoin=True,
+                        backref=backref(u'iso_3166_1_codes'))
+
+
+class ISO31662(Base):
+    __tablename__ = 'iso_3166_2'
+    __table_args__ = {'schema': 'musicbrainz'}
+
+    area_id = Column(
+        'area', Integer,
+        ForeignKey('musicbrainz.area.id', name='iso_3166_2_fk_area'),
+        nullable=False
+    )
+    code = Column(String(10), primary_key=True)
+
+    area = relationship('Area', foreign_keys=[area_id], innerjoin=True,
+                        backref=backref(u'iso_3166_2_codes'))
+
+
+class ISO31663(Base):
+    __tablename__ = 'iso_3166_3'
+    __table_args__ = {'schema': 'musicbrainz'}
+
+    area_id = Column(
+        'area', Integer,
+        ForeignKey('musicbrainz.area.id', name='iso_3166_3_fk_area'),
+        nullable=False
+    )
+    code = Column(CHAR(4), primary_key=True)
+
+    area = relationship('Area', foreign_keys=[area_id], innerjoin=True,
+                        backref=backref(u'iso_3166_3_codes'))
 
 
 class Language(Base):
@@ -139,5 +217,6 @@ class Language(Base):
     iso_code_2b = Column(CHAR(3))
     iso_code_1 = Column(CHAR(2))
     name = Column(String(100), nullable=False)
-    frequency = Column(Integer, default=0, server_default=sql.text('0'), nullable=False)
+    frequency = Column(Integer, default=0, server_default=sql.text('0'),
+                       nullable=False)
     iso_code_3 = Column(CHAR(3))

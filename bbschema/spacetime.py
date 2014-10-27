@@ -17,7 +17,8 @@
 
 """Specifies resources related to space and time - Events and Places."""
 
-from sqlalchemy import Column, Integer, String, DateTime, UnicodeText, ForeignKey, Boolean, Unicode
+from sqlalchemy import (Column, Integer, String, DateTime, UnicodeText,
+                        ForeignKey, Boolean, Unicode)
 from sqlalchemy.dialects.postgresql import UUID, JSON
 from sqlalchemy.sql import text
 
@@ -25,6 +26,7 @@ from mbdata.types import Point
 
 from .base import Base
 from .resource import Resource
+
 
 class Place(Resource):
     """A place represents a particular point in the world."""
@@ -51,6 +53,7 @@ class Place(Resource):
     __mapper_args__ = {
         'polymorphic_identity': 'pla',
     }
+
 
 class PlaceType(Base):
     """Represents a type of place."""

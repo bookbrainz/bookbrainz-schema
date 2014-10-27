@@ -18,9 +18,11 @@
 """This module specifies a class, Resource, which is designed to be used as the
 base class for all resource models specified in this package."""
 
-from sqlalchemy import Column, Integer, String, DateTime, UnicodeText, ForeignKey
+from sqlalchemy import (Boolean, Column, Integer, String, DateTime,
+                        UnicodeText, ForeignKey)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import text
+import sqlalchemy.sql as sql
 
 from bbschema.base import Base
 
@@ -50,6 +52,7 @@ class Resource(Base):
         'polymorphic_on': _type
     }
 
+
 class ResourceAlias(Base):
     """An alias, or alternative name, for some Resource."""
 
@@ -58,9 +61,23 @@ class ResourceAlias(Base):
 
     id = Column(Integer, primary_key=True)
 
-    resource_gid = Column(UUID, ForeignKey('bookbrainz.resource.gid'), nullable=False)
+    resource_gid = Column(
+        UUID(as_uuid=True), ForeignKey('bookbrainz.resource.gid'),
+        nullable=False
+    )
 
     name = Column(UnicodeText, nullable=False)
+    sort_name = Column(UnicodeText, nullable=False)
+    language_id = Column(Integer, ForeignKey('musicbrainz.language.id'))
+    primary = Column(Boolean, nullable=False, default=False)
+
+    begin_date = Column(DateTime(timezone=True))
+    end_date = Column(DateTime(timezone=True))
+
+    edits_pending = Column(Integer, default=0, server_default=sql.text('0'),
+                           nullable=False)
+    last_updated = Column(DateTime(timezone=True),
+                          server_default=sql.func.now())
 
 
 class ResourceApproval(Base):
@@ -72,8 +89,53 @@ class ResourceApproval(Base):
     __table_args__ = {'schema': 'bookbrainz'}
 
     # Composite primary key on resource_gid and editor_id.
-    resource_gid = Column(UUID(as_uuid=True), ForeignKey('bookbrainz.resource.gid'),
-                          primary_key=True)
+    resource_gid = Column(
+        UUID(as_uuid=True), ForeignKey('bookbrainz.resource.gid'),
+        primary_key=True
+    )
 
-    editor_id = Column(Integer, ForeignKey('bookbrainz.editor.id'), primary_key=True)
+    editor_id = Column(Integer, ForeignKey('bookbrainz.editor.id'),
+                       primary_key=True)
 
+
+class ResourceComment(Base):
+    """In BookBrainz, editors can leave comments on Resources. These comments
+    are displayed to other users, and persist throughout changes, unlike
+    approvals.
+    """
+
+    __tablename__ = 'resource_comment'
+    __table_args__ = {'schema': 'bookbrainz'}
+
+    id = Column(Integer, primary_key=True)
+    resource_gid = Column(
+        UUID(as_uuid=True), ForeignKey('bookbrainz.resource.gid'),
+        nullable=False
+    )
+
+    editor_id = Column(Integer, ForeignKey('bookbrainz.editor.id'),
+                       nullable=False)
+
+    content = Column(UnicodeText, nullable=False)
+    time = Column(DateTime(timezone=True), nullable=False,
+                  server_default=sql.func.now())
+
+
+class ResourceGIDRedirect(Base):
+    __tablename__ = 'resource_gid_redirect'
+    __table_args__ = {'schema': 'bookbrainz'}
+
+    gid = Column(UUID(as_uuid=True), primary_key=True, nullable=False)
+    new_gid = Column(UUID(as_uuid=True), ForeignKey('bookbrainz.resource.gid'),
+                     nullable=False)
+    created = Column(DateTime(timezone=True), nullable=False,
+                     server_default=sql.func.now())
+
+
+class ResourceDeletion(Base):
+    __tablename__ = 'resource_deletion'
+    __table_args__ = {'schema': 'bookbrainz'}
+
+    gid = Column(UUID(as_uuid=True), primary_key=True)
+    time = Column(DateTime(timezone=True), nullable=False,
+                  server_default=sql.func.now())

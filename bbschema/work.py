@@ -17,12 +17,14 @@
 
 """This module provides classes related to the Work resource."""
 
-from sqlalchemy import Column, Integer, String, DateTime, UnicodeText, ForeignKey
+from sqlalchemy import (Column, Integer, String, DateTime, UnicodeText,
+                        ForeignKey)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import text
 
 from .base import Base
 from .resource import Resource
+
 
 class Work(Resource):
     """Work class, representing some work of literature."""
@@ -41,6 +43,7 @@ class Work(Resource):
         'polymorphic_identity': 'wor',
     }
 
+
 class WorkType(Base):
     """Class which is used to represent different types of section."""
 
@@ -50,13 +53,15 @@ class WorkType(Base):
     id = Column(Integer, primary_key=True)
     name = Column(UnicodeText)
 
+
 class WorkWork(Base):
     """Class to represent the relationship between works and subworks."""
 
     __tablename__ = 'work_work'
     __table_args__ = {'schema': 'bookbrainz'}
 
-    parent_gid = Column(UUID, ForeignKey('bookbrainz.work.gid'), primary_key=True)
-    child_gid = Column(UUID, ForeignKey('bookbrainz.work.gid'), primary_key=True)
+    parent_gid = Column(UUID, ForeignKey('bookbrainz.work.gid'),
+                        primary_key=True)
+    child_gid = Column(UUID, ForeignKey('bookbrainz.work.gid'),
+                       primary_key=True)
     position = Column(Integer, primary_key=True)
-

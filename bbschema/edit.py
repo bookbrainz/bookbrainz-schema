@@ -19,9 +19,11 @@
 contained in BookBrainz - Editor and Edit. Editors can make edits, which
 are changes to the database."""
 
-from sqlalchemy import Column, Integer, String, DateTime, UnicodeText, ForeignKey, Boolean, Unicode, Enum
+from sqlalchemy import (Column, Integer, String, DateTime, UnicodeText,
+                        ForeignKey, Boolean, Unicode, Enum)
 from sqlalchemy.dialects.postgresql import UUID, JSON
 from sqlalchemy.sql import text
+import sqlalchemy.sql as sql
 
 from bbschema.base import Base
 
@@ -31,25 +33,40 @@ class Edit(Base):
     __tablename__ = 'edit'
     __table_args__ = {'schema': 'bookbrainz'}
 
-    id = Column(UUID(as_uuid=True), primary_key=True)
+    id = Column(Integer, primary_key=True)
 
-    resource_gid = Column(UUID, ForeignKey('bookbrainz.resource.gid'), nullable=False)
-    editor_id = Column(Integer, ForeignKey('bookbrainz.editor.id'), nullable=False)
+    editor_id = Column(Integer, ForeignKey('bookbrainz.editor.id'),
+                       nullable=False)
 
-    start_data = Column(JSON, nullable=False)
-    end_data = Column(JSON, nullable=False)
+    changes = Column(JSON, nullable=False)
 
     # Edit is editable by the editor until it gets applied - at which point
-    # it will either update the entity or go into the waiting period for
-    # approvals.
+    # it will update the entity
     applied = Column(Boolean, nullable=False, default=False)
+    reverted = Column(Boolean, nullable=False, default=False)
+
+    time = Column(DateTime(timezone=True), server_default=sql.func.now())
+
+
+class EditNote(Base):
+    __tablename__ = 'edit_note'
+    __table_args__ = {'schema': 'bookbrainz'}
+
+    id = Column(Integer, primary_key=True)
+    editor_id = Column(Integer, ForeignKey('bookbrainz.editor.id'),
+                       nullable=False)
+    edit_id = Column(Integer, ForeignKey('bookbrainz.edit.id'),
+                     nullable=False)
+
+    content = Column(UnicodeText, nullable=False)
+    time = Column(DateTime(timezone=True), nullable=False,
+                  server_default=sql.func.now())
 
 
 class Editor(Base):
 
     __tablename__ = 'editor'
     __table_args__ = {'schema': 'bookbrainz'}
-
 
     id = Column(Integer, primary_key=True)
 
@@ -62,12 +79,29 @@ class Editor(Base):
     active = Column(Boolean, nullable=False)
     suspended = Column(Boolean, nullable=False)
 
+
 class EditorLanguage(Base):
 
     __tablename__ = 'editor_language'
     __table_args__ = {'schema': 'bookbrainz'}
 
-    editor_id = Column(Integer, ForeignKey('bookbrainz.editor.id'), primary_key=True)
-    language = Column(Integer, ForeignKey('musicbrainz.language.id'), primary_key=True)
-    fluency = Column(Enum('basic', 'intermediate', 'advanced', 'native', name='FLUENCY'), nullable=False)
+    editor_id = Column(Integer, ForeignKey('bookbrainz.editor.id'),
+                       primary_key=True)
+    language = Column(Integer, ForeignKey('musicbrainz.language.id'),
+                      primary_key=True)
+    fluency = Column(Enum('basic', 'intermediate', 'advanced', 'native',
+                          name='FLUENCY'), nullable=False)
 
+
+class Vote(Base):
+
+    __tablename__ = 'vote'
+    __table_args__ = {'schema': 'bookbrainz'}
+
+    edit_id = Column(Integer, ForeignKey('bookbrainz.edit.id'),
+                     primary_key=True)
+    editor_id = Column(Integer, ForeignKey('bookbrainz.editor.id'),
+                       primary_key=True)
+    cancelled = Column(Boolean, nullable=False, default=False)
+
+    time = Column(DateTime(timezone=True), server_default=sql.func.now())
