@@ -15,10 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-"""This module provides a class, Entity, to represent people or organizations.
-"""
-
-from sqlalchemy import (Column, Integer, String, DateTime, UnicodeText,
+from sqlalchemy import (Column, Integer, String, DateTime, Unicode, UnicodeText,
                         ForeignKey)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import text
@@ -27,32 +24,28 @@ from .base import Base
 from .resource import Resource
 
 
-class Entity(Resource):
-    """Entity class, representing people and organisations."""
-
-    __tablename__ = 'entity'
+class Edition(Resource):
+    __tablename__ = 'edition'
     __table_args__ = {'schema': 'bookbrainz'}
 
     gid = Column(UUID(as_uuid=True), ForeignKey('bookbrainz.resource.gid'),
                  primary_key=True)
 
-    primary_name = Column(UnicodeText, nullable=False)
+    short_description = Column(Unicode(200), nullable=False)
 
-    gender_id = Column(Integer, ForeignKey('musicbrainz.gender.id'))
+    description = Column(UnicodeText)
 
-    type_id = Column(Integer, ForeignKey('bookbrainz.entity_type.id'))
+    type_id = Column(Integer, ForeignKey('bookbrainz.edition_type.id'))
 
-    begin_event_gid = Column(UUID, ForeignKey('bookbrainz.event.gid'))
-    end_event_gid = Column(UUID, ForeignKey('bookbrainz.event.gid'))
+    work_gid = Column(UUID(as_uuid=True), ForeignKey('bookbrainz.work.gid'), nullable=False)
 
     __mapper_args__ = {
-        'polymorphic_identity': 'ent',
+        'polymorphic_identity': 'edi',
     }
 
 
-class EntityType(Base):
-
-    __tablename__ = 'entity_type'
+class EditionType(Base):
+    __tablename__ = 'edition_type'
     __table_args__ = {'schema': 'bookbrainz'}
 
     id = Column(Integer, primary_key=True)
