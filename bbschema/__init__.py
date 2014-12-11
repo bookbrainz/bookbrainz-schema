@@ -1,13 +1,26 @@
+# -*- coding: utf8 -*-
 
-from .resource import (Resource, ResourceApproval, ResourceAlias,
-                       ResourceComment, ResourceGIDRedirect, ResourceDeletion)
-from .entity import Entity, EntityType
-from .edit import Edit, EditNote, Editor, EditorLanguage, Vote
-from .edition import Edition, EditionType
-from .spacetime import Place, PlaceType, Event
-from .work import Work, WorkType, WorkWork
-from .musicbrainz import (AreaType, Area, AreaGIDRedirect, AreaAliasType,
-                          AreaAlias, Gender, ISO31661, ISO31662, ISO31663,
-                          Language)
-from .relationships import (Relationship, RelationshipType,
-                           ResourceRelationship, TextRelationship)
+# Copyright (C) 2014  Ben Ockmore
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+from .entity import (Entity, EntityRedirect, EntityTree, EntityData,
+                     Annotation, Disambiguation, Alias, TreeAlias)
+from .user import (User, UserType, InactiveUser, SuspendedUser, EditorStats)
+from .entities import (BookData, BookType, CreatorData, CreatorType)
+from .versioning import (Edit, Revision, EntityRevision, RelationshipRevision,
+                         EditNote)
+from .musicbrainz import (Gender, Language)
+from .relationships import (Relationship, RelationshipType, RelationshipTree
+                            RelationshipEntity, RelationshipText)
