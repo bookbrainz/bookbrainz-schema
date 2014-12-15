@@ -16,8 +16,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from sqlalchemy import (Boolean, Column, DateTime, ForeignKey, Integer, String,
-                        UnicodeText, SmallInteger)
+                        UnicodeText, SmallInteger, Unicode)
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import text
 import sqlalchemy.sql as sql
 
@@ -85,7 +86,7 @@ class RelationshipText(Base):
     __table_args__ = {'schema': 'bookbrainz'}
 
     relationship_tree_id = Column(
-        Integer, ForeignKey('bookbrainz.rel.id'), primary_key=True
+        Integer, ForeignKey('bookbrainz.rel_tree.id'), primary_key=True
     )
     position = Column(SmallInteger, primary_key=True)
 

@@ -19,6 +19,7 @@ from sqlalchemy import (Column, Integer, String, DateTime, UnicodeText,
                         ForeignKey, Boolean, Unicode, Enum, Date)
 from sqlalchemy.sql import text
 import sqlalchemy.sql as sql
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
 from bbschema.base import Base
@@ -86,3 +87,46 @@ class EditorStats(Base):
     edits_accepted = Column(Integer, nullable=False, server_default=text('0'))
     edits_rejected = Column(Integer, nullable=False, server_default=text('0'))
     edits_failed = Column(Integer, nullable=False, server_default=text('0'))
+
+
+class OAuthClient(Base):
+    __tablename__ = 'oauth_client'
+    __table_args__ = {'schema': 'bookbrainz'}
+
+    client_id = Column(UUID(as_uuid=True), primary_key=True,
+                       server_default=text('public.uuid_generate_v4()'))
+
+    client_secret = Column(
+        UUID(as_uuid=True), unique=True, index=True, nullable=False,
+        server_default=text('public.uuid_generate_v4()')
+    )
+    is_confidential = Column(Boolean, nullable=False,
+                             server_default=sql.false())
+    _redirect_uris = Column(UnicodeText, nullable=False, server_default='')
+    _default_scopes = Column(UnicodeText, nullable=False, server_default='')
+
+    # creator of the client, not required
+    owner_id = Column(Integer, ForeignKey('bookbrainz.user.id'),
+                      nullable=False)
+
+    @property
+    def client_type(self):
+        if self.is_confidential:
+            return 'confidential'
+        return 'public'
+
+    @property
+    def redirect_uris(self):
+        if self._redirect_uris:
+            return self._redirect_uris.split()
+        return []
+
+    @property
+    def default_redirect_uri(self):
+        return ''
+
+    @property
+    def default_scopes(self):
+        if self._default_scopes:
+            return self._default_scopes.split()
+        return []

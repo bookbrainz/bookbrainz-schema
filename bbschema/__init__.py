@@ -17,10 +17,12 @@
 
 from .entity import (Entity, EntityRedirect, EntityTree, EntityData,
                      Annotation, Disambiguation, Alias, TreeAlias)
-from .user import (User, UserType, InactiveUser, SuspendedUser, EditorStats)
-from .entities import (BookData, BookType, CreatorData, CreatorType)
+from .user import (User, UserType, InactiveUser, SuspendedUser, EditorStats,
+                   OAuthClient)
+from .entities import (PublicationData, PublicationType, CreatorData,
+                       CreatorType)
 from .versioning import (Edit, Revision, EntityRevision, RelationshipRevision,
                          EditNote)
 from .musicbrainz import (Gender, Language)
-from .relationships import (Relationship, RelationshipType, RelationshipTree
+from .relationships import (Relationship, RelationshipType, RelationshipTree,
                             RelationshipEntity, RelationshipText)

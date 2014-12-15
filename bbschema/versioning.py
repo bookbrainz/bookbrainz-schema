@@ -20,7 +20,8 @@ contained in BookBrainz - Editor and Edit. Editors can make edits, which
 are changes to the database."""
 
 from sqlalchemy import (Column, Integer, String, DateTime, UnicodeText,
-                        ForeignKey, Boolean, Unicode, Enum, Table)
+                        ForeignKey, Boolean, Unicode, Enum, Table,
+                        SmallInteger)
 from sqlalchemy.dialects.postgresql import UUID, JSON
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import text

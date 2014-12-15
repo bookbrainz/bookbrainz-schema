@@ -69,10 +69,10 @@ class CreatorData(EntityData):
 
     country_id = Column(Integer)
     gender_id = Column(Integer, ForeignKey('musicbrainz.gender.id'))
-    creator_type_id = Column(Integer, ForeignKey('bookbrainz.book_type.id'))
+    creator_type_id = Column(Integer, ForeignKey('bookbrainz.creator_type.id'))
 
     gender = relationship('Gender')
-    creator_type = relationship('BookType')
+    creator_type = relationship('CreatorType')
 
     __mapper_args__ = {
         'polymorphic_identity': 2,
