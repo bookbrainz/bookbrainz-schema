@@ -39,7 +39,7 @@ class Entity(Base):
 
     last_updated = Column(DateTime, nullable=False,
                           server_default=sql.func.now())
-    master_revision_id = Column(Integer, nullable=False)
+    master_revision_id = Column(Integer)
 
 
 class EntityRedirect(Base):

@@ -47,7 +47,8 @@ class Edit(Base):
 
     user = relationship('User', backref='edits')
     edit_notes = relationship('EditNote')
-    revisions = relationship('Revision', secondary=edit_revision_table)
+    revisions = relationship('Revision', secondary=edit_revision_table,
+                             backref=edits)
 
 
 class Revision(Base):

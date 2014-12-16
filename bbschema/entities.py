@@ -36,7 +36,7 @@ class PublicationData(EntityData):
     id = Column(Integer, ForeignKey('bookbrainz.entity_data.id'), primary_key=True)
     book_type_id = Column(Integer, ForeignKey('bookbrainz.publication_type.id'))
 
-    book_type = relationship('PublicationType')
+    publication_type = relationship('PublicationType')
 
     __mapper_args__ = {
         'polymorphic_identity': 1,
