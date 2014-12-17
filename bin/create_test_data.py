@@ -1,14 +1,15 @@
-import sys
-from sqlachemy import session_maker, create_engine
+#!/usr/bin/env python
+# -*- coding: utf8 -*-
 
-from base import Base
+import sys
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
 engine = create_engine(sys.argv[1], echo=True)
-Base.metadata.bind(engine)
 
 from bbschema import *
 
-Session = session_maker()
+Session = sessionmaker(bind=engine)
 session = Session()
 
 # Create User, Publication and Creator Types
@@ -25,14 +26,14 @@ session.add(creator_type)
 session.commit()
 
 # Create a couple of users
-user1 = User(name="user1", email="user1@users.org", user_type=editor_type)
-user2 = User(name="user2", email="user1@users.org", user_type=editor_type)
+user1 = User(name="user1", email="user1@users.org", user_type_id=editor_type.id)
+user2 = User(name="user2", email="user1@users.org", user_type_id=editor_type.id)
 session.add_all([user1, user2])
 session.commit()
 
 # Create an Edit or two
-edit1 = Edit(user=user1, status=0)
-edit2 = Edit(user=user1, status=0)
+edit1 = Edit(user_id=user1.id, status=0)
+edit2 = Edit(user_id=user1.id, status=0)
 session.add_all((edit1, edit2))
 session.commit()
 
@@ -43,27 +44,34 @@ entity3 = Entity()
 session.add_all((entity1, entity2, entity3))
 session.commit()
 
-pub_data1 = PublicationData(publication_type=pub_type)
-pub_data2 = PublicationData(publication_type=pub_type)
-creator_data = CreatorData(creator_type=creator_type)
+pub_data1 = PublicationData(publication_type_id=pub_type.id)
+pub_data2 = PublicationData(publication_type_id=pub_type.id)
+creator_data = CreatorData(creator_type_id=creator_type.id)
 session.add_all([pub_data1, pub_data2, creator_data])
 
-entity_tree1 = EntityTree(data=pub_data1)
-entity_tree2 = EntityTree(data=pub_data2)
-entity_tree3 = EntityTree(data=creator_data)
+entity_tree1 = EntityTree()
+entity_tree1.data = pub_data1
+entity_tree2 = EntityTree()
+entity_tree2.data = pub_data2
+entity_tree3 = EntityTree()
+entity_tree3.data = creator_data
 session.add_all([entity_tree1, entity_tree2, entity_tree3])
 session.commit()
 
 # Create some revisions
-revision1 = EntityRevision(user=user1, entity_gid=entity1.gid,
-                           entity_tree=entity_tree1)
-revision2 = EntityRevision(user=user1, entity_gid=entity1.gid,
-                           entity_tree=entity_tree2)
-revision3 = EntityRevision(user=user1, entity_gid=entity1.gid,
-                           entity_tree=entity_tree3)
+revision1 = EntityRevision(user_id=user1.id, entity_gid=entity1.gid,
+                           entity_tree_id=entity_tree1.id)
+revision2 = EntityRevision(user_id=user1.id, entity_gid=entity2.gid,
+                           entity_tree_id=entity_tree2.id)
+revision3 = EntityRevision(user_id=user1.id, entity_gid=entity3.gid,
+                           entity_tree_id=entity_tree3.id)
 
 revision1.edits = [edit1]
 revision2.edits = [edit1]
 revision3.edits = [edit2]
+
+entity1.master_revision = revision1
+entity2.master_revision = revision2
+entity3.master_revision = revision3
 session.add_all([revision1, revision2, revision3])
 session.commit()
