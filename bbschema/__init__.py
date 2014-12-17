@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from .entity import (Entity, EntityRedirect, EntityTree, EntityData,
-                     Annotation, Disambiguation, Alias, TreeAlias)
+                     Annotation, Disambiguation, Alias)
 from .user import (User, UserType, InactiveUser, SuspendedUser, EditorStats,
                    OAuthClient)
 from .entities import (PublicationData, PublicationType, CreatorData,

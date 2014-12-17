@@ -34,7 +34,7 @@ class PublicationData(EntityData):
     __table_args__ = {'schema': 'bookbrainz'}
 
     id = Column(Integer, ForeignKey('bookbrainz.entity_data.id'), primary_key=True)
-    book_type_id = Column(Integer, ForeignKey('bookbrainz.publication_type.id'))
+    publication_type_id = Column(Integer, ForeignKey('bookbrainz.publication_type.id'))
 
     publication_type = relationship('PublicationType')
 

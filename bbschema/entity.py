@@ -39,8 +39,14 @@ class Entity(Base):
 
     last_updated = Column(DateTime, nullable=False,
                           server_default=sql.func.now())
-    master_revision_id = Column(Integer)
+    master_revision_id = Column(
+        Integer, ForeignKey('bookbrainz.entity_revision.id', use_alter=True,
+                            name='fk_master_revision_id')
+    )
 
+    master_revision = relationship(
+        'EntityRevision', foreign_keys=[master_revision_id], post_update=True
+    )
 
 class EntityRedirect(Base):
     __tablename__ = 'entity_redirect'
@@ -49,6 +55,13 @@ class EntityRedirect(Base):
     source_gid = Column(UUID(as_uuid=True), primary_key=True)
     target_gid = Column(UUID(as_uuid=True),
                         ForeignKey('bookbrainz.entity.gid'), nullable=False)
+
+
+entity_tree_alias = Table('entity_tree_alias', Base.metadata,
+    Column('entity_tree_id', Integer, ForeignKey('bookbrainz.entity_tree.id')),
+    Column('alias_id', Integer, ForeignKey('bookbrainz.alias.id')),
+    schema='bookbrainz'
+)
 
 
 class EntityTree(Base):
@@ -63,7 +76,10 @@ class EntityTree(Base):
 
     data_id = Column(Integer, ForeignKey('bookbrainz.entity_data.id'), nullable=False)
 
+    annotation = relationship('Annotation')
+    disambiguation = relationship('Disambiguation')
     data = relationship('EntityData')
+    aliases = relationship("Alias", secondary=entity_tree_alias)
 
 
 class EntityData(Base):
@@ -112,13 +128,3 @@ class Alias(Base):
     sort_name = Column(UnicodeText, nullable=False)
 
     language_id = Column(Integer)
-
-
-class TreeAlias(Base):
-    __tablename__ = 'tree_alias'
-    __table_args__ = {'schema': 'bookbrainz'}
-
-    entity_tree_id = Column(Integer, ForeignKey('bookbrainz.entity_tree.id'),
-                            primary_key=True)
-    alias_id = Column(Integer, ForeignKey('bookbrainz.alias.id'),
-                      primary_key=True)

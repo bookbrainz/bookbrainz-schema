@@ -32,7 +32,8 @@ from bbschema.base import Base
 edit_revision_table = Table(
     'edit_revision', Base.metadata,
     Column('edit_id', Integer, ForeignKey('bookbrainz.edit.id')),
-    Column('revision_id', Integer, ForeignKey('bookbrainz.revision.id'))
+    Column('revision_id', Integer, ForeignKey('bookbrainz.revision.id')),
+    schema='bookbrainz'
 )
 
 
@@ -48,7 +49,7 @@ class Edit(Base):
     user = relationship('User', backref='edits')
     edit_notes = relationship('EditNote')
     revisions = relationship('Revision', secondary=edit_revision_table,
-                             backref=edits)
+                             backref='edits')
 
 
 class Revision(Base):
@@ -71,25 +72,28 @@ class Revision(Base):
     }
 
 
-class EntityRevision(Base):
+class EntityRevision(Revision):
     __tablename__ = 'entity_revision'
     __table_args__ = {'schema': 'bookbrainz'}
 
     id = Column(Integer, ForeignKey('bookbrainz.revision.id'),
                 primary_key=True)
 
-    entity_gid = Column(UUID(as_uuid=True),
-                        ForeignKey('bookbrainz.entity.gid'), nullable=False)
+    entity_gid = Column(UUID(as_uuid=True), ForeignKey('bookbrainz.entity.gid'),
+                        nullable=False)
     entity_tree_id = Column(
         Integer, ForeignKey('bookbrainz.entity_tree.id'), nullable=False
     )
+
+    entity = relationship('Entity', foreign_keys=[entity_gid])
+    entity_tree = relationship('EntityTree')
 
     __mapper_args__ = {
         'polymorphic_identity': 1,
     }
 
 
-class RelationshipRevision(Base):
+class RelationshipRevision(Revision):
     __tablename__ = 'rel_revision'
     __table_args__ = {'schema': 'bookbrainz'}
 
