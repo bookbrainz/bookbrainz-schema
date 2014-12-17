@@ -19,15 +19,13 @@
 contained in BookBrainz - Editor and Edit. Editors can make edits, which
 are changes to the database."""
 
-from sqlalchemy import (Column, Integer, String, DateTime, UnicodeText,
-                        ForeignKey, Boolean, Unicode, Enum, Table,
-                        SmallInteger)
-from sqlalchemy.dialects.postgresql import UUID, JSON
+import sqlalchemy.sql as sql
+from bbschema.base import Base
+from sqlalchemy import (Boolean, Column, DateTime, Enum, ForeignKey, Integer,
+                        SmallInteger, String, Table, Unicode, UnicodeText)
+from sqlalchemy.dialects.postgresql import JSON, UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import text
-import sqlalchemy.sql as sql
-
-from bbschema.base import Base
 
 edit_revision_table = Table(
     'edit_revision', Base.metadata,

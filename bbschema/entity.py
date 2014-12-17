@@ -18,14 +18,13 @@
 """This module specifies a class, Resource, which is designed to be used as the
 base class for all resource models specified in this package."""
 
-from sqlalchemy import (Boolean, Column, Integer, String, DateTime,
-                        UnicodeText, ForeignKey)
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.sql import text
-from sqlalchemy.orm import relationship
 import sqlalchemy.sql as sql
-
 from bbschema.base import Base
+from sqlalchemy import (Boolean, Column, DateTime, ForeignKey, Integer, String,
+                        Table, UnicodeText)
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
+from sqlalchemy.sql import text
 
 
 class Entity(Base):
