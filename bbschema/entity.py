@@ -19,12 +19,13 @@
 base class for all resource models specified in this package."""
 
 import sqlalchemy.sql as sql
-from bbschema.base import Base
 from sqlalchemy import (Boolean, Column, DateTime, ForeignKey, Integer, String,
                         Table, UnicodeText)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import text
+
+from bbschema.base import Base
 
 
 class Entity(Base):
@@ -47,6 +48,7 @@ class Entity(Base):
         'EntityRevision', foreign_keys=[master_revision_id], post_update=True
     )
 
+
 class EntityRedirect(Base):
     __tablename__ = 'entity_redirect'
     __table_args__ = {'schema': 'bookbrainz'}
@@ -56,9 +58,12 @@ class EntityRedirect(Base):
                         ForeignKey('bookbrainz.entity.gid'), nullable=False)
 
 
-entity_tree_alias = Table('entity_tree_alias', Base.metadata,
-    Column('entity_tree_id', Integer, ForeignKey('bookbrainz.entity_tree.id')),
-    Column('alias_id', Integer, ForeignKey('bookbrainz.alias.id')),
+entity_tree_alias = Table(
+    'entity_tree_alias', Base.metadata,
+    Column('entity_tree_id', Integer, ForeignKey('bookbrainz.entity_tree.id'),
+           primary_key=True),
+    Column('alias_id', Integer, ForeignKey('bookbrainz.alias.id'),
+           primary_key=True),
     schema='bookbrainz'
 )
 
@@ -73,7 +78,8 @@ class EntityTree(Base):
     disambiguation_id = Column(Integer,
                                ForeignKey('bookbrainz.disambiguation.id'))
 
-    data_id = Column(Integer, ForeignKey('bookbrainz.entity_data.id'), nullable=False)
+    data_id = Column(Integer, ForeignKey('bookbrainz.entity_data.id'),
+                     nullable=False)
 
     annotation = relationship('Annotation')
     disambiguation = relationship('Disambiguation')

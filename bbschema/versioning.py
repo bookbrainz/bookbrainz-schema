@@ -29,8 +29,10 @@ from sqlalchemy.sql import text
 
 edit_revision_table = Table(
     'edit_revision', Base.metadata,
-    Column('edit_id', Integer, ForeignKey('bookbrainz.edit.id')),
-    Column('revision_id', Integer, ForeignKey('bookbrainz.revision.id')),
+    Column('edit_id', Integer, ForeignKey('bookbrainz.edit.id'),
+           primary_key=True),
+    Column('revision_id', Integer, ForeignKey('bookbrainz.revision.id'),
+           primary_key=True),
     schema='bookbrainz'
 )
 

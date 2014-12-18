@@ -33,8 +33,10 @@ class PublicationData(EntityData):
     __tablename__ = 'publication_data'
     __table_args__ = {'schema': 'bookbrainz'}
 
-    id = Column(Integer, ForeignKey('bookbrainz.entity_data.id'), primary_key=True)
-    publication_type_id = Column(Integer, ForeignKey('bookbrainz.publication_type.id'))
+    id = Column(Integer, ForeignKey('bookbrainz.entity_data.id'),
+                primary_key=True)
+    publication_type_id = Column(Integer,
+                                 ForeignKey('bookbrainz.publication_type.id'))
 
     publication_type = relationship('PublicationType')
 
@@ -55,7 +57,8 @@ class CreatorData(EntityData):
     __tablename__ = 'creator_data'
     __table_args__ = {'schema': 'bookbrainz'}
 
-    id = Column(Integer, ForeignKey('bookbrainz.entity_data.id'), primary_key=True)
+    id = Column(Integer, ForeignKey('bookbrainz.entity_data.id'),
+                primary_key=True)
 
     begin_date = Column(Date)
     begin_date_precision = Column(

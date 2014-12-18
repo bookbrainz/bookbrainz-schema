@@ -45,8 +45,10 @@ class User(Base):
     reputation = Column(Integer, nullable=False, server_default=text('0'))
     bio = Column(UnicodeText)
     birth_date = Column(Date)
-    created_at = Column(DateTime(timezone=True), server_default=sql.func.now())
-    active_at = Column(DateTime(timezone=True), server_default=sql.func.now())
+    created_at = Column(DateTime(timezone=True), nullable=False,
+                        server_default=sql.func.now())
+    active_at = Column(DateTime(timezone=True), nullable=False,
+                       server_default=sql.func.now())
 
     user_type_id = Column(Integer, ForeignKey('bookbrainz.user_type.id'),
                           nullable=False)
