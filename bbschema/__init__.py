@@ -26,3 +26,9 @@ from .versioning import (Edit, Revision, EntityRevision, RelationshipRevision,
 from .musicbrainz import (Gender, Language)
 from .relationships import (Relationship, RelationshipType, RelationshipTree,
                             RelationshipEntity, RelationshipText)
+
+import base
+
+
+def create_all(engine):
+    base.Base.metadata.create_all(engine)

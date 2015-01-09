@@ -44,6 +44,7 @@ entity3 = Entity()
 session.add_all((entity1, entity2, entity3))
 session.commit()
 
+# Make some data
 pub_data1 = PublicationData(publication_type_id=pub_type.id)
 pub_data2 = PublicationData(publication_type_id=pub_type.id)
 creator_data = CreatorData(creator_type_id=creator_type.id)
@@ -55,6 +56,25 @@ entity_tree2 = EntityTree()
 entity_tree2.data = pub_data2
 entity_tree3 = EntityTree()
 entity_tree3.data = creator_data
+
+# Now some aliases, annotations and disambiguations
+entity1_alias1 = Alias(name='アウト', sort_name='アウト')
+entity1_alias2 = Alias(name='Out', sort_name='Out')
+entity1_alias3 = Alias(name='Le quattro casalinghe di Tokyo', sort_name='Le quattro casalinghe di Tokyo')
+entity1_alias4 = Alias(name='De nachtploeg', sort_name='De nachtploeg')
+entity_tree1.aliases.extend([entity1_alias1, entity1_alias2, entity1_alias3, entity1_alias4])
+
+entity2_alias1 = Alias(name='桐野 夏生', sort_name='桐野 夏生')
+entity2_alias2 = Alias(name='Natsuo Kirino', sort_name='Kirino, Natsuo')
+entity_tree2.aliases.extend([entity2_alias1, entity2_alias2])
+
+entity3_alias1 = Alias(name='Stephen Snyder', sort_name='Snyder, Stephen')
+entity_tree3.aliases.append(entity3_alias1)
+
+# And a disambiguation
+entity1_disambig = Disambiguation(comment='book by Natsuo Kirino')
+entity_tree1.disambiguation = entity1_disambig
+
 session.add_all([entity_tree1, entity_tree2, entity_tree3])
 session.commit()
 
