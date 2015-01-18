@@ -133,3 +133,8 @@ class Alias(Base):
     sort_name = Column(UnicodeText, nullable=False)
 
     language_id = Column(Integer)
+
+    @classmethod
+    def copy(cls, other):
+        return cls(name=other.name, sort_name=other.sort_name,
+                   language_id=other.language_id)

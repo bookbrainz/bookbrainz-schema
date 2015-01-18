@@ -44,6 +44,10 @@ class PublicationData(EntityData):
         'polymorphic_identity': 1,
     }
 
+    @classmethod
+    def copy(cls, other):
+        return cls(publication_type_id=other.publication_type_id)
+
 
 class PublicationType(Base):
     __tablename__ = 'publication_type'
@@ -80,6 +84,19 @@ class CreatorData(EntityData):
     __mapper_args__ = {
         'polymorphic_identity': 2,
     }
+
+    @classmethod
+    def copy(cls, other):
+        return cls(
+            begin_date=other.begin_date,
+            begin_date_precision=other.begin_date_precision,
+            end_date=other.end_date,
+            end_date_precision=other.end_date_precision,
+            ended=other.ended,
+            county_id=other.country_id,
+            gender_id=other.gender_id,
+            creator_type_id=other.creator_type_id
+        )
 
 
 class CreatorType(Base):
