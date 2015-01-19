@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from sqlalchemy import (Boolean, Column, DateTime, ForeignKey, Integer, String,
+from sqlalchemy import (Boolean, Column, DateTime, ForeignKey, Integer,
                         UnicodeText, SmallInteger, Unicode)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
@@ -33,8 +33,7 @@ class Relationship(Base):
 
     last_updated = Column(DateTime, nullable=False,
                           server_default=sql.func.now())
-    master_revision_id = Column(Integer, ForeignKey('bookbrainz.revision.id'),
-                                nullable=False)
+    master_revision_id = Column(Integer, ForeignKey('bookbrainz.revision.id'))
 
 
 class RelationshipType(Base):
@@ -64,8 +63,8 @@ class RelationshipTree(Base):
         Integer, ForeignKey('bookbrainz.rel_type.id'), nullable=False
     )
 
-    entities = relationship('RelationshipEntity')
-    texts = relationship('RelationshipText')
+    entities = relationship('RelationshipEntity', backref='relationship_tree')
+    texts = relationship('RelationshipText', backref='relationship_tree')
 
 
 class RelationshipEntity(Base):
