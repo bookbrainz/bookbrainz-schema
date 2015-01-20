@@ -35,6 +35,9 @@ class Relationship(Base):
                           server_default=sql.func.now())
     master_revision_id = Column(Integer, ForeignKey('bookbrainz.revision.id'))
 
+    master_revision = relationship(
+        'RelationshipRevision', foreign_keys=[master_revision_id], post_update=True
+    )
 
 class RelationshipType(Base):
     __tablename__ = 'rel_type'
@@ -78,6 +81,8 @@ class RelationshipEntity(Base):
 
     entity_gid = Column(UUID(as_uuid=True),
                         ForeignKey('bookbrainz.entity.gid'), nullable=False)
+
+    entity = relationship('Entity')
 
 
 class RelationshipText(Base):

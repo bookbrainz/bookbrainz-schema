@@ -25,6 +25,7 @@ from sqlalchemy import (Boolean, Column, DateTime, Enum, ForeignKey, Integer,
                         SmallInteger, String, Table, Unicode, UnicodeText)
 from sqlalchemy.dialects.postgresql import JSON, UUID
 from sqlalchemy.orm import relationship
+import sqlalchemy.orm
 from sqlalchemy.sql import text
 
 edit_revision_table = Table(
@@ -105,6 +106,9 @@ class RelationshipRevision(Revision):
     relationship_tree_id = Column(
         Integer, ForeignKey('bookbrainz.rel_tree.id'), nullable=False
     )
+
+    relationship = sqlalchemy.orm.relationship('Relationship', foreign_keys=[relationship_id])
+    relationship_tree = sqlalchemy.orm.relationship('RelationshipTree')
 
     __mapper_args__ = {
         'polymorphic_identity': 2,
