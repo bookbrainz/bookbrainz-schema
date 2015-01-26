@@ -57,7 +57,8 @@ class User(Base):
 
     inactive = relationship('InactiveUser', uselist=False)
     suspended = relationship('SuspendedUser', uselist=False)
-    editor_stats = relationship('EditorStats', uselist=False)
+    editor_stats = relationship('EditorStats', uselist=False, backref='user')
+    user_type = relationship('UserType')
 
 
 class InactiveUser(Base):
