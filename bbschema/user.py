@@ -15,14 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from sqlalchemy import (Column, Integer, String, DateTime, UnicodeText,
-                        ForeignKey, Boolean, Unicode, Enum, Date)
-from sqlalchemy.sql import text
 import sqlalchemy.sql as sql
+from bbschema.base import Base
+from sqlalchemy import (Boolean, Column, Date, DateTime, ForeignKey, Integer,
+                        Unicode, UnicodeText)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
-
-from bbschema.base import Base
+from sqlalchemy.sql import text
 
 
 class UserType(Base):
@@ -65,14 +64,16 @@ class InactiveUser(Base):
     __tablename__ = 'inactive_users'
     __table_args__ = {'schema': 'bookbrainz'}
 
-    user_id = Column(Integer, ForeignKey('bookbrainz.user.id'), primary_key=True)
+    user_id = Column(Integer, ForeignKey('bookbrainz.user.id'),
+                     primary_key=True)
 
 
 class SuspendedUser(Base):
     __tablename__ = 'suspended_users'
     __table_args__ = {'schema': 'bookbrainz'}
 
-    user_id = Column(Integer, ForeignKey('bookbrainz.user.id'), primary_key=True)
+    user_id = Column(Integer, ForeignKey('bookbrainz.user.id'),
+                     primary_key=True)
 
     reason = Column(UnicodeText, nullable=False)
 
@@ -90,6 +91,38 @@ class EditorStats(Base):
     edits_accepted = Column(Integer, nullable=False, server_default=text('0'))
     edits_rejected = Column(Integer, nullable=False, server_default=text('0'))
     edits_failed = Column(Integer, nullable=False, server_default=text('0'))
+
+
+class Message(Base):
+
+    __tablename__ = 'message'
+    __table_args__ = {'schema': 'bookbrainz'}
+
+    message_id = Column(Integer, primary_key=True)
+
+    sender_id = Column(Integer, ForeignKey('bookbrainz.user.id'),
+                       nullable=True)
+
+    subject = Column(Unicode(255), nullable=False)
+    conent = Column(UnicodeText, nullable=False)
+
+    sender = relationship('User')
+
+
+class MessageReceipt(Base):
+
+    __tablename_ = 'message_receipt'
+    __table_args__ = {'schema': 'bookbrainz'}
+
+    message_id = Column(Integer, ForeignKey('bookbrainz.message.id'),
+                        primary_key=True)
+    recipient_id = Column(Integer, ForeignKey('bookbrainz.user.id'),
+                          primary_key=True)
+
+    archived = Column(Boolean, nullable=False, default=False)
+
+    message = relationship('Message', backref='receipts')
+    recipient = relationship('User')
 
 
 class OAuthClient(Base):
