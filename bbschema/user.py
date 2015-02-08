@@ -111,7 +111,7 @@ class Message(Base):
 
 class MessageReceipt(Base):
 
-    __tablename_ = 'message_receipt'
+    __tablename__ = 'message_receipt'
     __table_args__ = {'schema': 'bookbrainz'}
 
     message_id = Column(Integer, ForeignKey('bookbrainz.message.id'),
