@@ -114,7 +114,7 @@ class MessageReceipt(Base):
     __tablename__ = 'message_receipt'
     __table_args__ = {'schema': 'bookbrainz'}
 
-    message_id = Column(Integer, ForeignKey('bookbrainz.message.id'),
+    message_id = Column(Integer, ForeignKey('bookbrainz.message.message_id'),
                         primary_key=True)
     recipient_id = Column(Integer, ForeignKey('bookbrainz.user.id'),
                           primary_key=True)
