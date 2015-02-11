@@ -105,3 +105,103 @@ class CreatorType(Base):
 
     id = Column(Integer, primary_key=True)
     label = Column(UnicodeText, nullable=False, unique=True)
+
+
+class PublisherData(EntityData):
+    __tablename__ = 'publisher_data'
+    __table_args__ = {'schema': 'bookbrainz'}
+
+    id = Column(Integer, ForeignKey('bookbrainz.entity_data.id'),
+                primary_key=True)
+
+    begin_date = Column(Date)
+    begin_date_precision = Column(
+        Enum('YEAR', 'MONTH', 'DAY', name='date_precision')
+    )
+    end_date = Column(Date)
+    end_date_precision = Column(
+        Enum('YEAR', 'MONTH', 'DAY', name='date_precision')
+    )
+    ended = Column(Boolean, server_default='false')
+
+    country_id = Column(Integer)
+    publisher_type_id = Column(Integer,
+                               ForeignKey('bookbrainz.publisher_type.id'))
+
+    publisher_type = relationship('PublisherType')
+
+    __mapper_args__ = {
+        'polymorphic_identity': 3,
+    }
+
+    @classmethod
+    def copy(cls, other):
+        cls(
+            begin_date=other.begin_date,
+            begin_date_precision=other.begin_date_precision,
+            end_date=other.end_date,
+            end_date_precision=other.end_date_precision,
+            ended=other.ended,
+            country_id=other.country_id,
+            publisher_type_id=other.publisher_type_id,
+        )
+
+
+class PublisherType(Base):
+    __tablename__ = 'publisher_type'
+    __table_args__ = {'schema': 'bookbrainz'}
+
+    id = Column(Integer, primary_key=True)
+    label = Column(UnicodeText, nullable=False, unique=True)
+
+
+class EditionData(EntityData):
+    __tablename__ = 'edition_data'
+    __table_args__ = {'schema': 'bookbrainz'}
+
+    id = Column(Integer, ForeignKey('bookbrainz.entity_data.id'),
+                primary_key=True)
+
+    # TODO: Implement creator credits, and add a FK here.
+
+    begin_date = Column(Date)
+    begin_date_precision = Column(
+        Enum('YEAR', 'MONTH', 'DAY', name='date_precision')
+    )
+    end_date = Column(Date)
+    end_date_precision = Column(
+        Enum('YEAR', 'MONTH', 'DAY', name='date_precision')
+    )
+    ended = Column(Boolean, server_default='false')
+
+    # TODO: add script ID, when that's replicated from MB
+
+    country_id = Column(Integer)
+    edition_status_id = Column(Integer,
+                               ForeignKey('bookbrainz.edition_status.id'))
+
+    edition_status = relationship('PublisherType')
+
+    __mapper_args__ = {
+        'polymorphic_identity': 4,
+    }
+
+    @classmethod
+    def copy(cls, other):
+        cls(
+            begin_date=other.begin_date,
+            begin_date_precision=other.begin_date_precision,
+            end_date=other.end_date,
+            end_date_precision=other.end_date_precision,
+            ended=other.ended,
+            edition_status_id=other.edition_status_id,
+            country_id=other.country_id,
+        )
+
+
+class EditionStatus(Base):
+    __tablename__ = 'edition_status'
+    __table_args__ = {'schema': 'bookbrainz'}
+
+    id = Column(Integer, primary_key=True)
+    label = Column(UnicodeText, nullable=False, unique=True)
