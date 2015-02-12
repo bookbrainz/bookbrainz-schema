@@ -188,7 +188,7 @@ class EditionData(EntityData):
                                ForeignKey('bookbrainz.edition_status.id'))
 
     language = relationship('Language')
-    edition_status = relationship('PublisherType')
+    edition_status = relationship('EditionStatus')
 
     __mapper_args__ = {
         'polymorphic_identity': 4,
