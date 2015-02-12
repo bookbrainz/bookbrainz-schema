@@ -18,15 +18,21 @@
 """This module specifies a class, Resource, which is designed to be used as the
 base class for all resource models specified in this package."""
 
-from sqlalchemy import (Boolean, Column, Integer, String, DateTime,
-                        UnicodeText, ForeignKey, Date, Enum)
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship
-from sqlalchemy.sql import text
-import sqlalchemy.sql as sql
-
 from bbschema.base import Base
+from sqlalchemy import (Boolean, Column, Date, Enum, ForeignKey, Integer,
+                        Table, UnicodeText)
+from sqlalchemy.orm import relationship
+
 from .entity import EntityData
+
+work_data_language_table = Table(
+    'work_data_language', Base.metadata,
+    Column('work_gid', Integer, ForeignKey('bookbrainz.work_data.id'),
+           primary_key=True),
+    Column('language_id', Integer, ForeignKey('musicbrainz.language.id'),
+           primary_key=True),
+    schema='bookbrainz'
+)
 
 
 class PublicationData(EntityData):
@@ -136,7 +142,7 @@ class PublisherData(EntityData):
 
     @classmethod
     def copy(cls, other):
-        cls(
+        return cls(
             begin_date=other.begin_date,
             begin_date_precision=other.begin_date_precision,
             end_date=other.end_date,
@@ -177,9 +183,11 @@ class EditionData(EntityData):
     # TODO: add script ID, when that's replicated from MB
 
     country_id = Column(Integer)
+    language_id = Column(Integer, ForeignKey('musicbrainz.language.id'))
     edition_status_id = Column(Integer,
                                ForeignKey('bookbrainz.edition_status.id'))
 
+    language = relationship('Language')
     edition_status = relationship('PublisherType')
 
     __mapper_args__ = {
@@ -188,7 +196,7 @@ class EditionData(EntityData):
 
     @classmethod
     def copy(cls, other):
-        cls(
+        return cls(
             begin_date=other.begin_date,
             begin_date_precision=other.begin_date_precision,
             end_date=other.end_date,
@@ -196,11 +204,48 @@ class EditionData(EntityData):
             ended=other.ended,
             edition_status_id=other.edition_status_id,
             country_id=other.country_id,
+            language_id=other.language_id,
         )
 
 
 class EditionStatus(Base):
     __tablename__ = 'edition_status'
+    __table_args__ = {'schema': 'bookbrainz'}
+
+    id = Column(Integer, primary_key=True)
+    label = Column(UnicodeText, nullable=False, unique=True)
+
+
+class WorkData(EntityData):
+    __tablename__ = 'work_data'
+    __table_args__ = {'schema': 'bookbrainz'}
+
+    id = Column(Integer, ForeignKey('bookbrainz.entity_data.id'),
+                primary_key=True)
+
+    work_type_id = Column(Integer, ForeignKey('bookbrainz.work_type.id'))
+
+    work_type = relationship('WorkType')
+    languages = relationship('Language', secondary=work_data_language_table)
+
+    __mapper_args__ = {
+        'polymorphic_identity': 5,
+    }
+
+    @classmethod
+    def copy(cls, other):
+        result = cls(
+            work_type_id=other.work_type_id,
+        )
+
+        # Copy languages
+        result.languages = other.languages
+
+        return result
+
+
+class WorkType(Base):
+    __tablename__ = 'work_type'
     __table_args__ = {'schema': 'bookbrainz'}
 
     id = Column(Integer, primary_key=True)
