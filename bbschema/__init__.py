@@ -20,7 +20,8 @@ from .entity import (Entity, EntityRedirect, EntityTree, EntityData,
 from .user import (User, UserType, InactiveUser, SuspendedUser, EditorStats,
                    OAuthClient)
 from .entities import (PublicationData, PublicationType, CreatorData,
-                       CreatorType)
+                       CreatorType, PublisherData, PublisherType, EditionData,
+                       EditionStatus, WorkData, WorkType)
 from .versioning import (Edit, Revision, EntityRevision, RelationshipRevision,
                          EditNote)
 from .musicbrainz import (Gender, Language)
