@@ -31,7 +31,7 @@ The original license for these classes is included in the comment below.
 # THE SOFTWARE.
 
 from sqlalchemy import (Column, Integer, String, DateTime, UnicodeText,
-                        ForeignKey, SMALLINT, CHAR, Boolean)
+                        ForeignKey, SMALLINT, CHAR, Boolean, Unicode)
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship, composite, backref
 from sqlalchemy.dialects.postgresql import UUID
@@ -47,8 +47,11 @@ class Gender(Base):
     __table_args__ = {'schema': 'musicbrainz'}
 
     id = Column(Integer, primary_key=True)
-    name = Column(String(255), nullable=False)
+    name = Column(Unicode(255), nullable=False)
 
+    parent_id = Column(Integer, ForeignKey('musicbrainz.gender.id'))
+    child_order = Column(Integer, nullable=0, server_default=sql.text('0'))
+    description = Column(UnicodeText)
 
 class Language(Base):
     __tablename__ = 'language'
@@ -58,7 +61,6 @@ class Language(Base):
     iso_code_2t = Column(CHAR(3))
     iso_code_2b = Column(CHAR(3))
     iso_code_1 = Column(CHAR(2))
-    name = Column(String(100), nullable=False)
-    frequency = Column(Integer, default=0, server_default=sql.text('0'),
-                       nullable=False)
+    name = Column(Unicode(100), nullable=False)
+    frequency = Column(Integer, nullable=False, server_default=sql.text('0'))
     iso_code_3 = Column(CHAR(3))
