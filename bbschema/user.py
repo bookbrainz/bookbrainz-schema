@@ -17,8 +17,8 @@
 
 import sqlalchemy.sql as sql
 from bbschema.base import Base
-from sqlalchemy import (Boolean, Column, Date, DateTime, ForeignKey, Integer,
-                        Unicode, UnicodeText)
+from sqlalchemy import (Boolean, Column, Date, DateTime, Enum, ForeignKey,
+                        Integer, Unicode, UnicodeText)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import text
@@ -57,6 +57,7 @@ class User(Base):
     inactive = relationship('InactiveUser', uselist=False)
     suspended = relationship('SuspendedUser', uselist=False)
     editor_stats = relationship('EditorStats', uselist=False, backref='user')
+    languages = relationship('EditorLanguage', backref='editor')
     user_type = relationship('UserType')
 
 
@@ -92,6 +93,23 @@ class EditorStats(Base):
     edits_rejected = Column(Integer, nullable=False, server_default=text('0'))
     edits_failed = Column(Integer, nullable=False, server_default=text('0'))
 
+
+class EditorLanguage(Base):
+    __tablename__ = 'editor_language'
+    __table_args__ = {'schema': 'bookbrainz'}
+
+    user_id = Column(Integer, ForeignKey('bookbrainz.user.id'),
+                     primary_key=True)
+    language_id = Column(Integer, ForeignKey('musicbrainz.language.id'),
+                         primary_key=True)
+
+    proficiency = Column(
+        Enum('BASIC', 'INTERMEDIATE', 'ADVANCED', 'NATIVE',
+             name='lang_proficiency'),
+        nullable=False
+    )
+
+    language = relationship("Language")
 
 class Message(Base):
 

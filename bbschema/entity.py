@@ -81,10 +81,13 @@ class EntityTree(Base):
     data_id = Column(Integer, ForeignKey('bookbrainz.entity_data.id'),
                      nullable=False)
 
+    default_alias_id = Column(Integer, ForeignKey('bookbrainz.alias.id'))
+
     annotation = relationship('Annotation')
     disambiguation = relationship('Disambiguation')
     data = relationship('EntityData')
     aliases = relationship("Alias", secondary=entity_tree_alias)
+    default_alias = relationship('Alias', foreign_keys=[default_alias_id])
 
 
 class EntityData(Base):
@@ -132,7 +135,11 @@ class Alias(Base):
     name = Column(UnicodeText, nullable=False)
     sort_name = Column(UnicodeText, nullable=False)
 
-    language_id = Column(Integer)
+    language_id = Column(Integer, ForeignKey('musicbrainz.language.id'))
+
+    primary = Column(Boolean, nullable=False, server_default=text('false'))
+
+    language = relationship('Language')
 
     @classmethod
     def copy(cls, other):
