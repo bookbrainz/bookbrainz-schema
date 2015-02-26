@@ -69,6 +69,8 @@ class RelationshipTree(Base):
     entities = relationship('RelationshipEntity', backref='relationship_tree')
     texts = relationship('RelationshipText', backref='relationship_tree')
 
+    relationship_type = relationship('RelationshipType')
+
 
 class RelationshipEntity(Base):
     __tablename__ = 'rel_entity'
