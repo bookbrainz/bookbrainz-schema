@@ -18,7 +18,7 @@
 from .entity import (Entity, EntityRedirect, EntityTree, EntityData,
                      Annotation, Disambiguation, Alias)
 from .user import (User, UserType, InactiveUser, SuspendedUser, EditorStats,
-                   OAuthClient)
+                   OAuthClient, Message, MessageReceipt, EditorLanguage)
 from .entities import (PublicationData, PublicationType, CreatorData,
                        CreatorType, PublisherData, PublisherType, EditionData,
                        EditionStatus, WorkData, WorkType)

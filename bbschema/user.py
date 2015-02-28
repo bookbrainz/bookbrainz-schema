@@ -122,7 +122,7 @@ class Message(Base):
                        nullable=True)
 
     subject = Column(Unicode(255), nullable=False)
-    conent = Column(UnicodeText, nullable=False)
+    content = Column(UnicodeText, nullable=False)
 
     sender = relationship('User')
 
