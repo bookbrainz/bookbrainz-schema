@@ -35,6 +35,17 @@ work_data_language_table = Table(
 )
 
 
+def entity_data_from_json(data):
+    TYPE_MAP = {
+        'publication_data': PublicationData,
+        'creator_data': CreatorData
+    }
+
+    for k, v in TYPE_MAP.items():
+        if k in data:
+            return v.from_json(data)
+
+
 class PublicationData(EntityData):
     __tablename__ = 'publication_data'
     __table_args__ = {'schema': 'bookbrainz'}

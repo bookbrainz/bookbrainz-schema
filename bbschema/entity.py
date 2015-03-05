@@ -19,13 +19,14 @@
 base class for all resource models specified in this package."""
 
 import sqlalchemy.sql as sql
-from sqlalchemy import (Boolean, Column, DateTime, ForeignKey, Integer, String,
+from sqlalchemy import (Boolean, Column, DateTime, ForeignKey, Integer,
                         Table, UnicodeText)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import text
 
-from bbschema.base import Base
+from .base import Base
+from .entities import entity_data_from_json
 
 
 class Entity(Base):
@@ -89,6 +90,63 @@ class EntityTree(Base):
     aliases = relationship("Alias", secondary=entity_tree_alias)
     default_alias = relationship('Alias', foreign_keys=[default_alias_id])
 
+    def __eq__(self, other):
+        # Assume that other is an EntityTree
+        for a, b in zip(self.aliases, other.aliases):
+            if a != b:
+                return False
+
+        return (
+            (self.annotation == other.annotation) and
+            (self.disambiguation == other.disambiguation) and
+            (self.data == other.data) and
+            (self.default_alias == other.default_alias)
+        )
+
+    def set_default_alias(self, revision_json):
+        raise NotImplementedError
+
+    @classmethod
+    def create(cls, revision_json):
+        result = cls()
+        result.data = entity_data_from_json(revision_json)
+        result.annotation = Annotation.create(revision_json)
+        result.disambiguation = Disambiguation.create(revision_json)
+        result.aliases = create_aliases(revision_json)
+
+        if result.aliases:
+            result.set_default_alias(revision_json)
+
+    def update(self, revision_json):
+        # Create a new tree, copying the current tree.
+        new_tree = self.copy(self)
+
+        # Update the properties with the provided JSON.
+        new_tree.data = self.data.update(revision_json)
+        new_tree.annotation = self.annotation.update(revision_json)
+        new_tree.disambiguation = self.disambiguation.update(revision_json)
+        new_tree.aliases = update_aliases(self.aliases, revision_json)
+
+        if new_tree.aliases:
+            new_tree.set_default_alias(revision_json)
+
+        # Now, return the new tree if anything was actually updated, or the old
+        # tree if not.
+        if self == new_tree:
+            return self
+        else:
+            return new_tree
+
+    # TODO: Fix this so that we can do "thing.copy()"
+    @classmethod
+    def copy(cls, other):
+        return cls(
+            annotation_id=other.annotation_id,
+            disambiguation_id=other.disambiguation_id,
+            data_id=other.data_id,
+            default_alias_id=other.default_alias_id
+        )
+
 
 class EntityData(Base):
     __tablename__ = 'entity_data'
@@ -111,9 +169,32 @@ class Annotation(Base):
 
     id = Column(Integer, primary_key=True)
 
-    content = Column(UnicodeText, nullable=False, server_default="")
+    content = Column(UnicodeText, nullable=False)
     created_at = Column(DateTime, nullable=False,
                         server_default=sql.func.now())
+
+    @classmethod
+    def copy(cls, other):
+        return cls(content=other.content, created_at=other.created_at)
+
+    @classmethod
+    def create(cls, revision_json):
+        if 'annotation' not in revision_json:
+            return None
+
+        return cls(content=revision_json['annotation'])
+
+    def update(self, revision_json):
+        if 'annotation' not in revision_json:
+            return self
+
+        if self.content == revision_json['annotation']:
+            return self
+
+        new_annotation = self.copy(self)
+        new_annotation.content = revision_json['annotation']
+
+        return new_annotation
 
 
 class Disambiguation(Base):
@@ -122,6 +203,29 @@ class Disambiguation(Base):
 
     id = Column(Integer, primary_key=True)
     comment = Column(UnicodeText, nullable=False, server_default="")
+
+    @classmethod
+    def copy(cls, other):
+        return cls(comment=other.comment)
+
+    @classmethod
+    def create(cls, revision_json):
+        if 'disambiguation' not in revision_json:
+            return None
+
+        return cls(comment=revision_json['disambiguation'])
+
+    def update(self, revision_json):
+        if 'disambiguation' not in revision_json:
+            return self
+
+        if self.comment == revision_json['disambiguation']:
+            return self
+
+        new_disambiguation = self.copy(self)
+        new_disambiguation.comment = revision_json['disambiguation']
+
+        return new_disambiguation
 
 
 class Alias(Base):
@@ -144,4 +248,45 @@ class Alias(Base):
     @classmethod
     def copy(cls, other):
         return cls(name=other.name, sort_name=other.sort_name,
-                   language_id=other.language_id)
+                   language_id=other.language_id, primary=other.primary)
+
+    def _update_from_json(self, data):
+        self.name = data.get('name') or self.name
+        self.sort_name = data.get('sort_name') or self.sort_name
+        self.language_id = data.get('language_id') or self.language_id
+        self.primary = data.get('primary') or self.primary
+
+    @classmethod
+    def create(cls, alias_json):
+        return cls(
+            name=alias_json['name'],
+            sort_name=alias_json['sort_name'],
+            language_id=alias_json.get('language_id'),
+            primary=alias_json.get('primary', False)
+        )
+
+
+def create_aliases(revision_json):
+    if 'aliases' not in revision_json:
+        return []
+
+    return [Alias.create(alias) for alias in revision_json['aliases']]
+
+
+def update_aliases(aliases, revision_json):
+    if 'aliases' not in revision_json:
+        return aliases
+
+    # Create a dictionary, to make it easier look up aliases by ID
+    alias_dict = dict((alias.id, alias) for alias in aliases)
+
+    new_aliases = []
+    for alias_id, alias_json in revision_json['aliases']:
+        if alias_id is None:
+            new_aliases.append(Alias.create(alias_json))
+        elif alias_json is None:
+            del alias_dict[alias_id]
+        else:
+            alias_dict[alias_id].update(alias_json)
+
+    return list(alias_dict.values()) + new_aliases

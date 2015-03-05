@@ -19,14 +19,16 @@
 contained in BookBrainz - Editor and Edit. Editors can make edits, which
 are changes to the database."""
 
-import sqlalchemy.sql as sql
-from bbschema.base import Base
-from sqlalchemy import (Boolean, Column, DateTime, Enum, ForeignKey, Integer,
-                        SmallInteger, String, Table, Unicode, UnicodeText)
-from sqlalchemy.dialects.postgresql import JSON, UUID
-from sqlalchemy.orm import relationship
 import sqlalchemy.orm
+import sqlalchemy.sql as sql
+from sqlalchemy import (Column, DateTime, ForeignKey, Integer, SmallInteger,
+                        Table, UnicodeText)
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
+from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.sql import text
+
+from . import Base, Entity, EntityTree
 
 edit_revision_table = Table(
     'edit_revision', Base.metadata,
@@ -80,8 +82,8 @@ class EntityRevision(Revision):
     id = Column(Integer, ForeignKey('bookbrainz.revision.id'),
                 primary_key=True)
 
-    entity_gid = Column(UUID(as_uuid=True), ForeignKey('bookbrainz.entity.gid'),
-                        nullable=False)
+    entity_gid = Column(UUID(as_uuid=True),
+                        ForeignKey('bookbrainz.entity.gid'), nullable=False)
     entity_tree_id = Column(
         Integer, ForeignKey('bookbrainz.entity_tree.id'), nullable=False
     )
@@ -92,6 +94,44 @@ class EntityRevision(Revision):
     __mapper_args__ = {
         'polymorphic_identity': 1,
     }
+
+    @classmethod
+    def create(cls, user, revision_json):
+        entity = Entity()
+
+        entity_tree = EntityTree.create(revision_json)
+
+        revision = cls()
+        revision.user = user
+        revision.entity = entity
+        revision.entity_tree = entity_tree
+
+        return revision
+
+    @classmethod
+    def update(cls, user, revision_json, session):
+        try:
+            entity = session.query(Entity).\
+                filter_by(gid=revision_json['gid'][0]).one()
+        except NoResultFound:
+            return None
+
+        if entity.master_revision_id is None:
+            return None
+
+        old_tree = entity.master_revision.entity_tree
+
+        new_tree = old_tree.update(revision_json)
+
+        if new_tree == old_tree:
+            return None
+
+        revision = cls()
+        revision.user = user
+        revision.entity = entity
+        revision.entity_tree = new_tree
+
+        return revision
 
 
 class RelationshipRevision(Revision):
@@ -107,7 +147,8 @@ class RelationshipRevision(Revision):
         Integer, ForeignKey('bookbrainz.rel_tree.id'), nullable=False
     )
 
-    relationship = sqlalchemy.orm.relationship('Relationship', foreign_keys=[relationship_id])
+    relationship = sqlalchemy.orm.relationship('Relationship',
+                                               foreign_keys=[relationship_id])
     relationship_tree = sqlalchemy.orm.relationship('RelationshipTree')
 
     __mapper_args__ = {
