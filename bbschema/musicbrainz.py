@@ -30,34 +30,28 @@ The original license for these classes is included in the comment below.
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from sqlalchemy import (Column, Integer, String, DateTime, UnicodeText,
-                        ForeignKey, SMALLINT, CHAR, Boolean, Unicode)
-from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import relationship, composite, backref
-from sqlalchemy.dialects.postgresql import UUID
 import sqlalchemy.sql as sql
-
-from mbdata.types import PartialDate
-
 from bbschema.base import Base
+from sqlalchemy import CHAR, Column, ForeignKey, Integer, Unicode, UnicodeText
 
 
 class Gender(Base):
     __tablename__ = 'gender'
     __table_args__ = {'schema': 'musicbrainz'}
 
-    id = Column(Integer, primary_key=True)
+    gender_id = Column('id', Integer, primary_key=True)
     name = Column(Unicode(255), nullable=False)
 
     parent_id = Column(Integer, ForeignKey('musicbrainz.gender.id'))
     child_order = Column(Integer, nullable=0, server_default=sql.text('0'))
     description = Column(UnicodeText)
 
+
 class Language(Base):
     __tablename__ = 'language'
     __table_args__ = {'schema': 'musicbrainz'}
 
-    id = Column(Integer, primary_key=True)
+    language_id = Column('id', Integer, primary_key=True)
     iso_code_2t = Column(CHAR(3))
     iso_code_2b = Column(CHAR(3))
     iso_code_1 = Column(CHAR(2))

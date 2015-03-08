@@ -26,16 +26,16 @@ from sqlalchemy import (Column, DateTime, ForeignKey, Integer, SmallInteger,
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm.exc import NoResultFound
-from sqlalchemy.sql import text
 
-from . import Base, Entity, EntityTree
+from .base import Base
+from .entity import Entity, EntityTree
 
 edit_revision_table = Table(
     'edit_revision', Base.metadata,
-    Column('edit_id', Integer, ForeignKey('bookbrainz.edit.id'),
+    Column('edit_id', Integer, ForeignKey('bookbrainz.edit.edit_id'),
            primary_key=True),
-    Column('revision_id', Integer, ForeignKey('bookbrainz.revision.id'),
-           primary_key=True),
+    Column('revision_id', Integer,
+           ForeignKey('bookbrainz.revision.revision_id'), primary_key=True),
     schema='bookbrainz'
 )
 
@@ -44,9 +44,10 @@ class Edit(Base):
     __tablename__ = 'edit'
     __table_args__ = {'schema': 'bookbrainz'}
 
-    id = Column(Integer, primary_key=True)
+    edit_id = Column(Integer, primary_key=True)
 
-    user_id = Column(Integer, ForeignKey('bookbrainz.user.id'), nullable=False)
+    user_id = Column(Integer, ForeignKey('bookbrainz.user.user_id'),
+                     nullable=False)
     status = Column(Integer, nullable=False)
 
     user = relationship('User', backref='edits')
@@ -59,9 +60,10 @@ class Revision(Base):
     __tablename__ = 'revision'
     __table_args__ = {'schema': 'bookbrainz'}
 
-    id = Column(Integer, primary_key=True)
+    revision_id = Column(Integer, primary_key=True)
 
-    user_id = Column(Integer, ForeignKey('bookbrainz.user.id'), nullable=False)
+    user_id = Column(Integer, ForeignKey('bookbrainz.user.user_id'),
+                     nullable=False)
     created_at = Column(DateTime(timezone=True), nullable=False,
                         server_default=sql.func.now())
 
@@ -79,13 +81,18 @@ class EntityRevision(Revision):
     __tablename__ = 'entity_revision'
     __table_args__ = {'schema': 'bookbrainz'}
 
-    id = Column(Integer, ForeignKey('bookbrainz.revision.id'),
-                primary_key=True)
+    revision_id = Column(
+        Integer, ForeignKey('bookbrainz.revision.revision_id'),
+        primary_key=True
+    )
 
-    entity_gid = Column(UUID(as_uuid=True),
-                        ForeignKey('bookbrainz.entity.gid'), nullable=False)
+    entity_gid = Column(
+        UUID(as_uuid=True), ForeignKey('bookbrainz.entity.entity_gid'),
+        nullable=False
+    )
     entity_tree_id = Column(
-        Integer, ForeignKey('bookbrainz.entity_tree.id'), nullable=False
+        Integer, ForeignKey('bookbrainz.entity_tree.entity_tree_id'),
+        nullable=False
     )
 
     entity = relationship('Entity', foreign_keys=[entity_gid])
@@ -138,13 +145,16 @@ class RelationshipRevision(Revision):
     __tablename__ = 'rel_revision'
     __table_args__ = {'schema': 'bookbrainz'}
 
-    id = Column(Integer, ForeignKey('bookbrainz.revision.id'),
-                primary_key=True)
+    revision_id = Column(Integer, ForeignKey('bookbrainz.revision.revision_id'),
+                         primary_key=True)
 
-    relationship_id = Column(Integer, ForeignKey('bookbrainz.rel.id'),
-                             nullable=False)
+    relationship_id = Column(
+        Integer, ForeignKey('bookbrainz.rel.relationship_id'),
+        nullable=False
+    )
     relationship_tree_id = Column(
-        Integer, ForeignKey('bookbrainz.rel_tree.id'), nullable=False
+        Integer, ForeignKey('bookbrainz.rel_tree.relationship_tree_id'),
+        nullable=False
     )
 
     relationship = sqlalchemy.orm.relationship('Relationship',
@@ -160,11 +170,11 @@ class EditNote(Base):
     __tablename__ = 'edit_note'
     __table_args__ = {'schema': 'bookbrainz'}
 
-    id = Column(Integer, primary_key=True)
+    edit_note_id = Column(Integer, primary_key=True)
 
-    user_id = Column(Integer, ForeignKey('bookbrainz.user.id'),
+    user_id = Column(Integer, ForeignKey('bookbrainz.user.user_id'),
                      nullable=False)
-    edit_id = Column(Integer, ForeignKey('bookbrainz.edit.id'),
+    edit_id = Column(Integer, ForeignKey('bookbrainz.edit.edit_id'),
                      nullable=False)
     content = Column(UnicodeText, nullable=False)
     posted_at = Column(DateTime(timezone=True), nullable=False,

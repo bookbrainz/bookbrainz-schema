@@ -35,14 +35,14 @@ class Entity(Base):
     __tablename__ = 'entity'
     __table_args__ = {'schema': 'bookbrainz'}
 
-    gid = Column(UUID(as_uuid=True), primary_key=True,
-                 server_default=text('public.uuid_generate_v4()'))
+    entity_gid = Column(UUID(as_uuid=True), primary_key=True,
+                        server_default=text('public.uuid_generate_v4()'))
 
     last_updated = Column(DateTime, nullable=False,
                           server_default=sql.func.now())
     master_revision_id = Column(
-        Integer, ForeignKey('bookbrainz.entity_revision.id', use_alter=True,
-                            name='fk_master_revision_id')
+        Integer, ForeignKey('bookbrainz.entity_revision.revision_id',
+                            use_alter=True, name='fk_master_revision_id')
     )
 
     master_revision = relationship(
@@ -55,15 +55,19 @@ class EntityRedirect(Base):
     __table_args__ = {'schema': 'bookbrainz'}
 
     source_gid = Column(UUID(as_uuid=True), primary_key=True)
-    target_gid = Column(UUID(as_uuid=True),
-                        ForeignKey('bookbrainz.entity.gid'), nullable=False)
+    target_gid = Column(
+        UUID(as_uuid=True), ForeignKey('bookbrainz.entity.entity_gid'),
+        nullable=False
+    )
 
 
 entity_tree_alias = Table(
     'entity_tree_alias', Base.metadata,
-    Column('entity_tree_id', Integer, ForeignKey('bookbrainz.entity_tree.id'),
-           primary_key=True),
-    Column('alias_id', Integer, ForeignKey('bookbrainz.alias.id'),
+    Column(
+        'entity_tree_id', Integer,
+        ForeignKey('bookbrainz.entity_tree.entity_tree_id'), primary_key=True
+    ),
+    Column('alias_id', Integer, ForeignKey('bookbrainz.alias.alias_id'),
            primary_key=True),
     schema='bookbrainz'
 )
@@ -73,16 +77,20 @@ class EntityTree(Base):
     __tablename__ = 'entity_tree'
     __table_args__ = {'schema': 'bookbrainz'}
 
-    id = Column(Integer, primary_key=True)
+    entity_tree_id = Column(Integer, primary_key=True)
 
-    annotation_id = Column(Integer, ForeignKey('bookbrainz.annotation.id'))
-    disambiguation_id = Column(Integer,
-                               ForeignKey('bookbrainz.disambiguation.id'))
+    annotation_id = Column(Integer,
+                           ForeignKey('bookbrainz.annotation.annotation_id'))
+    disambiguation_id = Column(
+        Integer, ForeignKey('bookbrainz.disambiguation.disambiguation_id')
+    )
 
-    data_id = Column(Integer, ForeignKey('bookbrainz.entity_data.id'),
-                     nullable=False)
+    data_id = Column(
+        Integer, ForeignKey('bookbrainz.entity_data.entity_data_id'),
+        nullable=False
+    )
 
-    default_alias_id = Column(Integer, ForeignKey('bookbrainz.alias.id'))
+    default_alias_id = Column(Integer, ForeignKey('bookbrainz.alias.alias_id'))
 
     annotation = relationship('Annotation')
     disambiguation = relationship('Disambiguation')
@@ -152,7 +160,7 @@ class EntityData(Base):
     __tablename__ = 'entity_data'
     __table_args__ = {'schema': 'bookbrainz'}
 
-    id = Column(Integer, primary_key=True)
+    entity_data_id = Column(Integer, primary_key=True)
 
     # For inheritance and url redirection
     _type = Column(Integer, nullable=False)
@@ -167,7 +175,7 @@ class Annotation(Base):
     __tablename__ = 'annotation'
     __table_args__ = {'schema': 'bookbrainz'}
 
-    id = Column(Integer, primary_key=True)
+    annotation_id = Column(Integer, primary_key=True)
 
     content = Column(UnicodeText, nullable=False)
     created_at = Column(DateTime, nullable=False,
@@ -201,7 +209,7 @@ class Disambiguation(Base):
     __tablename__ = 'disambiguation'
     __table_args__ = {'schema': 'bookbrainz'}
 
-    id = Column(Integer, primary_key=True)
+    disambiguation_id = Column(Integer, primary_key=True)
     comment = Column(UnicodeText, nullable=False, server_default="")
 
     @classmethod
@@ -234,7 +242,7 @@ class Alias(Base):
     __tablename__ = 'alias'
     __table_args__ = {'schema': 'bookbrainz'}
 
-    id = Column(Integer, primary_key=True)
+    alias_id = Column(Integer, primary_key=True)
 
     name = Column(UnicodeText, nullable=False)
     sort_name = Column(UnicodeText, nullable=False)
@@ -278,7 +286,7 @@ def update_aliases(aliases, revision_json):
         return aliases
 
     # Create a dictionary, to make it easier look up aliases by ID
-    alias_dict = dict((alias.id, alias) for alias in aliases)
+    alias_dict = dict((alias.alias_id, alias) for alias in aliases)
 
     new_aliases = []
     for alias_id, alias_json in revision_json['aliases']:
