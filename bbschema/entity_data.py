@@ -37,6 +37,7 @@ work_data_language_table = Table(
     schema='bookbrainz'
 )
 
+
 class EntityData(Base):
     __tablename__ = 'entity_data'
     __table_args__ = {'schema': 'bookbrainz'}
@@ -50,7 +51,6 @@ class EntityData(Base):
         'polymorphic_identity': 0,
         'polymorphic_on': _type
     }
-
 
 
 def entity_data_from_json(data):

@@ -19,16 +19,17 @@ from .entity import (Entity, EntityRedirect, EntityTree,
                      Annotation, Disambiguation, Alias)
 from .user import (User, UserType, InactiveUser, SuspendedUser, EditorStats,
                    OAuthClient, Message, MessageReceipt, EditorLanguage)
-from .entity_data import (EntityData, PublicationData, PublicationType, CreatorData,
-                       CreatorType, PublisherData, PublisherType, EditionData,
-                       EditionStatus, WorkData, WorkType)
+from .entity_data import (EntityData, PublicationData, PublicationType,
+                          CreatorData, CreatorType, PublisherData,
+                          PublisherType, EditionData, EditionStatus, WorkData,
+                          WorkType)
 from .versioning import (Edit, Revision, EntityRevision, RelationshipRevision,
                          EditNote)
 from .musicbrainz import (Gender, Language)
 from .relationships import (Relationship, RelationshipType, RelationshipTree,
                             RelationshipEntity, RelationshipText)
 
-import base
+from . import base
 
 
 def create_all(engine):

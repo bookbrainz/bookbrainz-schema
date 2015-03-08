@@ -145,8 +145,10 @@ class RelationshipRevision(Revision):
     __tablename__ = 'rel_revision'
     __table_args__ = {'schema': 'bookbrainz'}
 
-    revision_id = Column(Integer, ForeignKey('bookbrainz.revision.revision_id'),
-                         primary_key=True)
+    revision_id = Column(
+        Integer, ForeignKey('bookbrainz.revision.revision_id'),
+        primary_key=True
+    )
 
     relationship_id = Column(
         Integer, ForeignKey('bookbrainz.rel.relationship_id'),
