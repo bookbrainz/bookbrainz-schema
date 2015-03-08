@@ -26,7 +26,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import text
 
 from .base import Base
-from .entities import entity_data_from_json
+from .entity_data import entity_data_from_json
 
 
 class Entity(Base):
@@ -154,21 +154,6 @@ class EntityTree(Base):
             data_id=other.data_id,
             default_alias_id=other.default_alias_id
         )
-
-
-class EntityData(Base):
-    __tablename__ = 'entity_data'
-    __table_args__ = {'schema': 'bookbrainz'}
-
-    entity_data_id = Column(Integer, primary_key=True)
-
-    # For inheritance and url redirection
-    _type = Column(Integer, nullable=False)
-
-    __mapper_args__ = {
-        'polymorphic_identity': 0,
-        'polymorphic_on': _type
-    }
 
 
 class Annotation(Base):

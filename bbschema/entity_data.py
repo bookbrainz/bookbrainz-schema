@@ -23,16 +23,34 @@ from sqlalchemy import (Boolean, Column, Date, Enum, ForeignKey, Integer,
                         Table, UnicodeText)
 from sqlalchemy.orm import relationship
 
-from .entity import EntityData
 
 work_data_language_table = Table(
     'work_data_language', Base.metadata,
-    Column('work_gid', Integer, ForeignKey('bookbrainz.work_data.id'),
-           primary_key=True),
-    Column('language_id', Integer, ForeignKey('musicbrainz.language.id'),
-           primary_key=True),
+    Column(
+        'work_data_id', Integer,
+        ForeignKey('bookbrainz.work_data.entity_data_id'), primary_key=True
+    ),
+    Column(
+        'language_id', Integer, ForeignKey('musicbrainz.language.id'),
+        primary_key=True
+    ),
     schema='bookbrainz'
 )
+
+class EntityData(Base):
+    __tablename__ = 'entity_data'
+    __table_args__ = {'schema': 'bookbrainz'}
+
+    entity_data_id = Column(Integer, primary_key=True)
+
+    # For inheritance and url redirection
+    _type = Column(Integer, nullable=False)
+
+    __mapper_args__ = {
+        'polymorphic_identity': 0,
+        'polymorphic_on': _type
+    }
+
 
 
 def entity_data_from_json(data):
@@ -50,10 +68,14 @@ class PublicationData(EntityData):
     __tablename__ = 'publication_data'
     __table_args__ = {'schema': 'bookbrainz'}
 
-    id = Column(Integer, ForeignKey('bookbrainz.entity_data.id'),
-                primary_key=True)
-    publication_type_id = Column(Integer,
-                                 ForeignKey('bookbrainz.publication_type.id'))
+    entity_data_id = Column(
+        Integer, ForeignKey('bookbrainz.entity_data.entity_data_id'),
+        primary_key=True
+    )
+
+    publication_type_id = Column(
+        Integer, ForeignKey('bookbrainz.publication_type.publication_type_id')
+    )
 
     publication_type = relationship('PublicationType')
 
@@ -61,16 +83,15 @@ class PublicationData(EntityData):
         'polymorphic_identity': 1,
     }
 
-    @classmethod
-    def copy(cls, other):
-        return cls(publication_type_id=other.publication_type_id)
+    def copy(self):
+        return PublicationData(publication_type_id=self.publication_type_id)
 
 
 class PublicationType(Base):
     __tablename__ = 'publication_type'
     __table_args__ = {'schema': 'bookbrainz'}
 
-    id = Column(Integer, primary_key=True)
+    publication_type_id = Column(Integer, primary_key=True)
     label = Column(UnicodeText, nullable=False, unique=True)
 
 
@@ -78,8 +99,10 @@ class CreatorData(EntityData):
     __tablename__ = 'creator_data'
     __table_args__ = {'schema': 'bookbrainz'}
 
-    id = Column(Integer, ForeignKey('bookbrainz.entity_data.id'),
-                primary_key=True)
+    entity_data_id = Column(
+        Integer, ForeignKey('bookbrainz.entity_data.entity_data_id'),
+        primary_key=True
+    )
 
     begin_date = Column(Date)
     begin_date_precision = Column(
@@ -93,7 +116,9 @@ class CreatorData(EntityData):
 
     country_id = Column(Integer)
     gender_id = Column(Integer, ForeignKey('musicbrainz.gender.id'))
-    creator_type_id = Column(Integer, ForeignKey('bookbrainz.creator_type.id'))
+    creator_type_id = Column(
+        Integer, ForeignKey('bookbrainz.creator_type.creator_type_id')
+    )
 
     gender = relationship('Gender')
     creator_type = relationship('CreatorType')
@@ -120,7 +145,7 @@ class CreatorType(Base):
     __tablename__ = 'creator_type'
     __table_args__ = {'schema': 'bookbrainz'}
 
-    id = Column(Integer, primary_key=True)
+    creator_type_id = Column(Integer, primary_key=True)
     label = Column(UnicodeText, nullable=False, unique=True)
 
 
@@ -128,8 +153,10 @@ class PublisherData(EntityData):
     __tablename__ = 'publisher_data'
     __table_args__ = {'schema': 'bookbrainz'}
 
-    id = Column(Integer, ForeignKey('bookbrainz.entity_data.id'),
-                primary_key=True)
+    entity_data_id = Column(
+        Integer, ForeignKey('bookbrainz.entity_data.entity_data_id'),
+        primary_key=True
+    )
 
     begin_date = Column(Date)
     begin_date_precision = Column(
@@ -142,8 +169,9 @@ class PublisherData(EntityData):
     ended = Column(Boolean, server_default='false')
 
     country_id = Column(Integer)
-    publisher_type_id = Column(Integer,
-                               ForeignKey('bookbrainz.publisher_type.id'))
+    publisher_type_id = Column(
+        Integer, ForeignKey('bookbrainz.publisher_type.publisher_type_id')
+    )
 
     publisher_type = relationship('PublisherType')
 
@@ -168,7 +196,7 @@ class PublisherType(Base):
     __tablename__ = 'publisher_type'
     __table_args__ = {'schema': 'bookbrainz'}
 
-    id = Column(Integer, primary_key=True)
+    publisher_type_id = Column(Integer, primary_key=True)
     label = Column(UnicodeText, nullable=False, unique=True)
 
 
@@ -176,8 +204,10 @@ class EditionData(EntityData):
     __tablename__ = 'edition_data'
     __table_args__ = {'schema': 'bookbrainz'}
 
-    id = Column(Integer, ForeignKey('bookbrainz.entity_data.id'),
-                primary_key=True)
+    entity_data_id = Column(
+        Integer, ForeignKey('bookbrainz.entity_data.entity_data_id'),
+        primary_key=True
+    )
 
     # TODO: Implement creator credits, and add a FK here.
 
@@ -195,8 +225,9 @@ class EditionData(EntityData):
 
     country_id = Column(Integer)
     language_id = Column(Integer, ForeignKey('musicbrainz.language.id'))
-    edition_status_id = Column(Integer,
-                               ForeignKey('bookbrainz.edition_status.id'))
+    edition_status_id = Column(
+        Integer, ForeignKey('bookbrainz.edition_status.edition_status_id')
+    )
 
     language = relationship('Language')
     edition_status = relationship('EditionStatus')
@@ -223,7 +254,7 @@ class EditionStatus(Base):
     __tablename__ = 'edition_status'
     __table_args__ = {'schema': 'bookbrainz'}
 
-    id = Column(Integer, primary_key=True)
+    edition_status_id = Column(Integer, primary_key=True)
     label = Column(UnicodeText, nullable=False, unique=True)
 
 
@@ -231,10 +262,13 @@ class WorkData(EntityData):
     __tablename__ = 'work_data'
     __table_args__ = {'schema': 'bookbrainz'}
 
-    id = Column(Integer, ForeignKey('bookbrainz.entity_data.id'),
-                primary_key=True)
+    entity_data_id = Column(
+        Integer, ForeignKey('bookbrainz.entity_data.entity_data_id'),
+        primary_key=True
+    )
 
-    work_type_id = Column(Integer, ForeignKey('bookbrainz.work_type.id'))
+    work_type_id = Column(Integer,
+                          ForeignKey('bookbrainz.work_type.work_type_id'))
 
     work_type = relationship('WorkType')
     languages = relationship('Language', secondary=work_data_language_table)
@@ -259,5 +293,5 @@ class WorkType(Base):
     __tablename__ = 'work_type'
     __table_args__ = {'schema': 'bookbrainz'}
 
-    id = Column(Integer, primary_key=True)
+    work_type_id = Column(Integer, primary_key=True)
     label = Column(UnicodeText, nullable=False, unique=True)
