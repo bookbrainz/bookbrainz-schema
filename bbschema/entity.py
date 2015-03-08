@@ -127,7 +127,7 @@ class EntityTree(Base):
 
     def update(self, revision_json):
         # Create a new tree, copying the current tree.
-        new_tree = self.copy(self)
+        new_tree = self.copy()
 
         # Update the properties with the provided JSON.
         new_tree.data = self.data.update(revision_json)
@@ -145,14 +145,12 @@ class EntityTree(Base):
         else:
             return new_tree
 
-    # TODO: Fix this so that we can do "thing.copy()"
-    @classmethod
-    def copy(cls, other):
-        return cls(
-            annotation_id=other.annotation_id,
-            disambiguation_id=other.disambiguation_id,
-            data_id=other.data_id,
-            default_alias_id=other.default_alias_id
+    def copy(self):
+        return EntityTree(
+            annotation_id=self.annotation_id,
+            disambiguation_id=self.disambiguation_id,
+            data_id=self.data_id,
+            default_alias_id=self.default_alias_id
         )
 
 
@@ -166,9 +164,8 @@ class Annotation(Base):
     created_at = Column(DateTime, nullable=False,
                         server_default=sql.func.now())
 
-    @classmethod
-    def copy(cls, other):
-        return cls(content=other.content, created_at=other.created_at)
+    def copy(self):
+        return Annotation(content=self.content, created_at=self.created_at)
 
     @classmethod
     def create(cls, revision_json):
@@ -184,7 +181,7 @@ class Annotation(Base):
         if self.content == revision_json['annotation']:
             return self
 
-        new_annotation = self.copy(self)
+        new_annotation = self.copy()
         new_annotation.content = revision_json['annotation']
 
         return new_annotation
@@ -197,9 +194,9 @@ class Disambiguation(Base):
     disambiguation_id = Column(Integer, primary_key=True)
     comment = Column(UnicodeText, nullable=False, server_default="")
 
-    @classmethod
-    def copy(cls, other):
-        return cls(comment=other.comment)
+    def copy(self):
+        cls = type(self)
+        return cls(comment=self.comment)
 
     @classmethod
     def create(cls, revision_json):
@@ -215,7 +212,7 @@ class Disambiguation(Base):
         if self.comment == revision_json['disambiguation']:
             return self
 
-        new_disambiguation = self.copy(self)
+        new_disambiguation = self.copy()
         new_disambiguation.comment = revision_json['disambiguation']
 
         return new_disambiguation
@@ -238,10 +235,9 @@ class Alias(Base):
 
     language = relationship('Language')
 
-    @classmethod
-    def copy(cls, other):
-        return cls(name=other.name, sort_name=other.sort_name,
-                   language_id=other.language_id, primary=other.primary)
+    def copy(self):
+        return Alias(name=self.name, sort_name=self.sort_name,
+                     language_id=self.language_id, primary=self.primary)
 
     def _update_from_json(self, data):
         self.name = data.get('name') or self.name

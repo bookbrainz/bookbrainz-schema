@@ -127,17 +127,16 @@ class CreatorData(EntityData):
         'polymorphic_identity': 2,
     }
 
-    @classmethod
-    def copy(cls, other):
-        return cls(
-            begin_date=other.begin_date,
-            begin_date_precision=other.begin_date_precision,
-            end_date=other.end_date,
-            end_date_precision=other.end_date_precision,
-            ended=other.ended,
-            county_id=other.country_id,
-            gender_id=other.gender_id,
-            creator_type_id=other.creator_type_id
+    def copy(self):
+        return CreatorData(
+            begin_date=self.begin_date,
+            begin_date_precision=self.begin_date_precision,
+            end_date=self.end_date,
+            end_date_precision=self.end_date_precision,
+            ended=self.ended,
+            county_id=self.country_id,
+            gender_id=self.gender_id,
+            creator_type_id=self.creator_type_id
         )
 
 
@@ -179,16 +178,15 @@ class PublisherData(EntityData):
         'polymorphic_identity': 3,
     }
 
-    @classmethod
-    def copy(cls, other):
-        return cls(
-            begin_date=other.begin_date,
-            begin_date_precision=other.begin_date_precision,
-            end_date=other.end_date,
-            end_date_precision=other.end_date_precision,
-            ended=other.ended,
-            country_id=other.country_id,
-            publisher_type_id=other.publisher_type_id,
+    def copy(self):
+        return PublisherData(
+            begin_date=self.begin_date,
+            begin_date_precision=self.begin_date_precision,
+            end_date=self.end_date,
+            end_date_precision=self.end_date_precision,
+            ended=self.ended,
+            country_id=self.country_id,
+            publisher_type_id=self.publisher_type_id,
         )
 
 
@@ -236,17 +234,16 @@ class EditionData(EntityData):
         'polymorphic_identity': 4,
     }
 
-    @classmethod
-    def copy(cls, other):
-        return cls(
-            begin_date=other.begin_date,
-            begin_date_precision=other.begin_date_precision,
-            end_date=other.end_date,
-            end_date_precision=other.end_date_precision,
-            ended=other.ended,
-            edition_status_id=other.edition_status_id,
-            country_id=other.country_id,
-            language_id=other.language_id,
+    def copy(self):
+        return EditionData(
+            begin_date=self.begin_date,
+            begin_date_precision=self.begin_date_precision,
+            end_date=self.end_date,
+            end_date_precision=self.end_date_precision,
+            ended=self.ended,
+            edition_status_id=self.edition_status_id,
+            country_id=self.country_id,
+            language_id=self.language_id,
         )
 
 
@@ -277,14 +274,13 @@ class WorkData(EntityData):
         'polymorphic_identity': 5,
     }
 
-    @classmethod
-    def copy(cls, other):
-        result = cls(
-            work_type_id=other.work_type_id,
+    def copy(self):
+        result = WorkData(
+            work_type_id=self.work_type_id,
         )
 
         # Copy languages
-        result.languages = other.languages
+        result.languages = self.languages
 
         return result
 
