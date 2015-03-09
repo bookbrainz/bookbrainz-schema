@@ -42,6 +42,7 @@ def upgrade():
     op.alter_column('rel', 'id', new_column_name='relationship_id', schema='bookbrainz')
     op.alter_column('edit_note', 'id', new_column_name='edit_note_id', schema='bookbrainz')
     op.alter_column('entity_revision', 'id', new_column_name='revision_id', schema='bookbrainz')
+    op.alter_column('rel_revision', 'id', new_column_name='revision_id', schema='bookbrainz')
     ### end Alembic commands ###
 
 
@@ -71,4 +72,5 @@ def downgrade():
     op.alter_column('rel', 'relationship_id', new_column_name='id', schema='bookbrainz')
     op.alter_column('edit_note', 'edit_note_id', new_column_name='id', schema='bookbrainz')
     op.alter_column('entity_revision', 'revision_id', new_column_name='id', schema='bookbrainz')
+    op.alter_column('rel_revision', 'revision_id', new_column_name='id', schema='bookbrainz')
     ### end Alembic commands ###
