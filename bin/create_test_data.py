@@ -26,14 +26,14 @@ session.add(creator_type)
 session.commit()
 
 # Create a couple of users
-user1 = User(name="user1", email="user1@users.org", user_type_id=editor_type.id)
-user2 = User(name="user2", email="user1@users.org", user_type_id=editor_type.id)
+user1 = User(name="user1", email="user1@users.org", user_type_id=editor_type.user_type_id)
+user2 = User(name="user2", email="user1@users.org", user_type_id=editor_type.user_type_id)
 session.add_all([user1, user2])
 session.commit()
 
 # Create an Edit or two
-edit1 = Edit(user_id=user1.id, status=0)
-edit2 = Edit(user_id=user1.id, status=0)
+edit1 = Edit(user_id=user1.user_id, status=0)
+edit2 = Edit(user_id=user1.user_id, status=0)
 session.add_all((edit1, edit2))
 session.commit()
 
@@ -45,9 +45,9 @@ session.add_all((entity1, entity2, entity3))
 session.commit()
 
 # Make some data
-pub_data1 = PublicationData(publication_type_id=pub_type.id)
-pub_data2 = PublicationData(publication_type_id=pub_type.id)
-creator_data = CreatorData(creator_type_id=creator_type.id)
+pub_data1 = PublicationData(publication_type_id=pub_type.publication_type_id)
+pub_data2 = PublicationData(publication_type_id=pub_type.publication_type_id)
+creator_data = CreatorData(creator_type_id=creator_type.creator_type_id)
 session.add_all([pub_data1, pub_data2, creator_data])
 
 entity_tree1 = EntityTree()
@@ -79,12 +79,12 @@ session.add_all([entity_tree1, entity_tree2, entity_tree3])
 session.commit()
 
 # Create some revisions
-revision1 = EntityRevision(user_id=user1.id, entity_gid=entity1.gid,
-                           entity_tree_id=entity_tree1.id)
-revision2 = EntityRevision(user_id=user1.id, entity_gid=entity2.gid,
-                           entity_tree_id=entity_tree2.id)
-revision3 = EntityRevision(user_id=user1.id, entity_gid=entity3.gid,
-                           entity_tree_id=entity_tree3.id)
+revision1 = EntityRevision(user_id=user1.user_id, entity_gid=entity1.entity_gid,
+                           entity_tree_id=entity_tree1.entity_tree_id)
+revision2 = EntityRevision(user_id=user1.user_id, entity_gid=entity2.entity_gid,
+                           entity_tree_id=entity_tree2.entity_tree_id)
+revision3 = EntityRevision(user_id=user1.user_id, entity_gid=entity3.entity_gid,
+                           entity_tree_id=entity_tree3.entity_tree_id)
 
 revision1.edits = [edit1]
 revision2.edits = [edit1]
