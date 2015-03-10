@@ -21,16 +21,19 @@ class test_cmd(Command):
 
 class bootstrap(Command):
     description = "initialize database and fixed data"
-    user_options = []
+    user_options = [
+        ('blank=', 'b', "don't add test data")
+    ]
 
     def initialize_options(self):
-        pass
+        self.blank = False
 
     def finalize_options(self):
         pass
 
     def run(self):
         import utils.create
+        import utils.data
         from bbschema import config
 
         utils.create.create_all(config.HOSTNAME, config.PORT, config.USERNAME,
@@ -38,6 +41,12 @@ class bootstrap(Command):
 
         utils.data.create_fixed(config.HOSTNAME, config.PORT, config.USERNAME,
                                 config.PASSWORD, config.DATABASE)
+
+        if not self.blank:
+            utils.data.create_test(
+                config.HOSTNAME, config.PORT, config.USERNAME, config.PASSWORD,
+                config.DATABASE
+            )
 
 
 if __name__ == '__main__':

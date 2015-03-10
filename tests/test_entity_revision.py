@@ -2,8 +2,7 @@ from unittest import TestCase
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from . import config
-from bbschema import EntityRevision, User, Entity
+from bbschema import EntityRevision, User, Entity, config
 
 class TestRelationshipViews(TestCase):
 
