@@ -119,7 +119,7 @@ class EntityRevision(Revision):
     def update(cls, user, revision_json, session):
         try:
             entity = session.query(Entity).\
-                filter_by(gid=revision_json['gid'][0]).one()
+                filter_by(entity_gid=revision_json['entity_gid'][0]).one()
         except NoResultFound:
             return None
 

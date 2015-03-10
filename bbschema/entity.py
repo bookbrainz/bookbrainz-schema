@@ -26,7 +26,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import text
 
 from .base import Base
-from .entity_data import entity_data_from_json
+from .entity_data import create_entity_data
 
 
 class Entity(Base):
@@ -111,19 +111,18 @@ class EntityTree(Base):
             (self.default_alias == other.default_alias)
         )
 
-    def set_default_alias(self, revision_json):
-        raise NotImplementedError
-
     @classmethod
     def create(cls, revision_json):
         result = cls()
-        result.data = entity_data_from_json(revision_json)
+        result.data = create_entity_data(revision_json)
         result.annotation = Annotation.create(revision_json)
         result.disambiguation = Disambiguation.create(revision_json)
-        result.aliases = create_aliases(revision_json)
+        result.aliases, default_alias = create_aliases(revision_json)
 
-        if result.aliases:
-            result.set_default_alias(revision_json)
+        if default_alias is not None:
+            result.default_alias = default_alias
+
+        return result
 
     def update(self, revision_json):
         # Create a new tree, copying the current tree.
@@ -133,10 +132,11 @@ class EntityTree(Base):
         new_tree.data = self.data.update(revision_json)
         new_tree.annotation = self.annotation.update(revision_json)
         new_tree.disambiguation = self.disambiguation.update(revision_json)
-        new_tree.aliases = update_aliases(self.aliases, revision_json)
+        new_tree.aliases, default_alias =\
+            update_aliases(self.aliases, self.default_alias_id, revision_json)
 
-        if new_tree.aliases:
-            new_tree.set_default_alias(revision_json)
+        if default_alias is not None:
+            new_tree.default_alias = default_alias
 
         # Now, return the new tree if anything was actually updated, or the old
         # tree if not.
@@ -254,28 +254,60 @@ class Alias(Base):
             primary=alias_json.get('primary', False)
         )
 
+    def update(self, alias_json):
+        new = self.copy()
+
+        if 'name' in alias_json:
+            new.name = alias_json['name']
+        if 'sort_name' in alias_json:
+            new.sort_name = alias_json['sort_name']
+        if 'language_id' in alias_json:
+            new.language_id = alias_json['language_id']
+        if 'primary' in alias_json:
+            new.primary = alias_json['primary']
+
+        return new
+
 
 def create_aliases(revision_json):
     if 'aliases' not in revision_json:
-        return []
+        return ([], None)
 
-    return [Alias.create(alias) for alias in revision_json['aliases']]
+    aliases = []
+    default_alias = None
+    for alias in revision_json['aliases']:
+        aliases.append(Alias.create(alias))
+        if alias.get('default', False):
+            default_alias = aliases[-1]
+
+    return (aliases, default_alias)
 
 
-def update_aliases(aliases, revision_json):
+def update_aliases(aliases, default_alias_id, revision_json):
     if 'aliases' not in revision_json:
-        return aliases
+        return (aliases, None)
 
     # Create a dictionary, to make it easier look up aliases by ID
     alias_dict = dict((alias.alias_id, alias) for alias in aliases)
 
     new_aliases = []
+    default_alias = None
     for alias_id, alias_json in revision_json['aliases']:
-        if alias_id is None:
-            new_aliases.append(Alias.create(alias_json))
-        elif alias_json is None:
+        if alias_json is None:
             del alias_dict[alias_id]
         else:
-            alias_dict[alias_id].update(alias_json)
+            if alias_id is None:
+                new_aliases.append(Alias.create(alias_json))
 
-    return list(alias_dict.values()) + new_aliases
+                if alias_json.get('default', False):
+                    default_alias = new_aliases[-1]
+            else:
+                alias_dict[alias_id] = alias_dict[alias_id].update(alias_json)
+                if alias_json.get('default', False):
+                    default_alias = alias_dict[alias_id]
+
+
+    if default_alias is None:
+        default_alias = alias_dict.get(default_alias_id, None)
+
+    return (list(alias_dict.values()) + new_aliases, default_alias)
