@@ -30,4 +30,5 @@ Edit the config.py file in bbschema/ to accomodate your settings, after
 creating a database to run the tests on. Then, execute the following commands:
 
     python setup.py bootstrap
+
     python setup.py test
