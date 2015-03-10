@@ -18,9 +18,32 @@ class test_cmd(Command):
     def run(self):
         unittest.main(tests, argv=sys.argv[:-1])
 
+
+class bootstrap(Command):
+    description = "initialize database and fixed data"
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        import utils.create
+        from bbschema import config
+
+        utils.create.create_all(config.HOSTNAME, config.PORT, config.USERNAME,
+                                config.PASSWORD, config.DATABASE)
+
+        utils.data.create_fixed(config.HOSTNAME, config.PORT, config.USERNAME,
+                                config.PASSWORD, config.DATABASE)
+
+
 if __name__ == '__main__':
     cmd_classes = {
         'test': test_cmd,
+        'bootstrap': bootstrap,
     }
 
     setup(
