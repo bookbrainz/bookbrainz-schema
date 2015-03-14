@@ -43,7 +43,7 @@ class Gender(Base):
     name = Column(Unicode(255), nullable=False)
 
     parent_id = Column(Integer, ForeignKey('musicbrainz.gender.id'))
-    child_order = Column(Integer, nullable=0, server_default=sql.text('0'))
+    child_order = Column(Integer, nullable=False, server_default=sql.text('0'))
     description = Column(UnicodeText)
 
 
