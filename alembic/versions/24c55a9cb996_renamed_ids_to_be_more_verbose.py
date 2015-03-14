@@ -1,14 +1,14 @@
 """Renamed IDs to be more verbose
 
-Revision ID: 77f6b263e8f
-Revises: 2cdc0539135
-Create Date: 2015-03-09 22:02:09.621692
+Revision ID: 24c55a9cb996
+Revises: 3298279b34ed
+Create Date: 2015-03-13 23:57:32.945721
 
 """
 
 # revision identifiers, used by Alembic.
-revision = '77f6b263e8f'
-down_revision = '2cdc0539135'
+revision = '24c55a9cb996'
+down_revision = '3298279b34ed'
 branch_labels = None
 depends_on = None
 
@@ -43,6 +43,7 @@ def upgrade():
     op.alter_column('edit_note', 'id', new_column_name='edit_note_id', schema='bookbrainz')
     op.alter_column('entity_revision', 'id', new_column_name='revision_id', schema='bookbrainz')
     op.alter_column('rel_revision', 'id', new_column_name='revision_id', schema='bookbrainz')
+    op.alter_column('work_data_language', 'work_gid', new_column_name='work_data_id', schema='bookbrainz')
     ### end Alembic commands ###
 
 
@@ -73,4 +74,5 @@ def downgrade():
     op.alter_column('edit_note', 'edit_note_id', new_column_name='id', schema='bookbrainz')
     op.alter_column('entity_revision', 'revision_id', new_column_name='id', schema='bookbrainz')
     op.alter_column('rel_revision', 'revision_id', new_column_name='id', schema='bookbrainz')
+    op.alter_column('work_data_language', 'work_data_id', new_column_name='work_gid', schema='bookbrainz')
     ### end Alembic commands ###
