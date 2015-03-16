@@ -46,7 +46,7 @@ class Revision(Base):
 
     notes = relationship('RevisionNote')
     user = relationship('User', backref='revisions')
-    parent = relationship('Revision', backref='children')
+    parent = relationship('Revision', backref='children', remote_side=[revision_id])
 
     _type = Column(SmallInteger, nullable=False)
 
