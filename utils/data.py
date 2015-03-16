@@ -204,11 +204,6 @@ def create_test(hostname, port, username, password, db_name):
         ]
     })
 
-    # Make an edit
-    edit1 = Edit(status=0)
-    edit1.user = user1
-    revision1.edits = [edit1]
-
     revision1.entity.master_revision = revision1
 
     session.add(revision1)
