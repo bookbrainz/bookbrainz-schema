@@ -42,8 +42,11 @@ class Revision(Base):
     created_at = Column(DateTime(timezone=True), nullable=False,
                         server_default=sql.func.now())
 
+    parent_id = Column(Integer, ForeignKey('bookbrainz.revision.revision_id'))
+
     notes = relationship('RevisionNote')
     user = relationship('User', backref='revisions')
+    parent = relationship('Revision', backref='children')
 
     _type = Column(SmallInteger, nullable=False)
 
