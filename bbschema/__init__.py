@@ -23,8 +23,8 @@ from .entity_data import (EntityData, PublicationData, PublicationType,
                           CreatorData, CreatorType, PublisherData,
                           PublisherType, EditionData, EditionStatus, WorkData,
                           WorkType)
-from .versioning import (Edit, Revision, EntityRevision, RelationshipRevision,
-                         EditNote)
+from .revision import (Revision, EntityRevision, RelationshipRevision,
+                       RevisionNote)
 from .musicbrainz import (Gender, Language)
 from .relationships import (Relationship, RelationshipType, RelationshipTree,
                             RelationshipEntity, RelationshipText)

@@ -30,31 +30,6 @@ from sqlalchemy.orm.exc import NoResultFound
 from .base import Base
 from .entity import Entity, EntityTree
 
-edit_revision_table = Table(
-    'edit_revision', Base.metadata,
-    Column('edit_id', Integer, ForeignKey('bookbrainz.edit.edit_id'),
-           primary_key=True),
-    Column('revision_id', Integer,
-           ForeignKey('bookbrainz.revision.revision_id'), primary_key=True),
-    schema='bookbrainz'
-)
-
-
-class Edit(Base):
-    __tablename__ = 'edit'
-    __table_args__ = {'schema': 'bookbrainz'}
-
-    edit_id = Column(Integer, primary_key=True)
-
-    user_id = Column(Integer, ForeignKey('bookbrainz.user.user_id'),
-                     nullable=False)
-    status = Column(Integer, nullable=False)
-
-    user = relationship('User', backref='edits')
-    edit_notes = relationship('EditNote')
-    revisions = relationship('Revision', secondary=edit_revision_table,
-                             backref='edits')
-
 
 class Revision(Base):
     __tablename__ = 'revision'
@@ -67,6 +42,7 @@ class Revision(Base):
     created_at = Column(DateTime(timezone=True), nullable=False,
                         server_default=sql.func.now())
 
+    notes = relationship('RevisionNote')
     user = relationship('User', backref='revisions')
 
     _type = Column(SmallInteger, nullable=False)
@@ -168,16 +144,17 @@ class RelationshipRevision(Revision):
     }
 
 
-class EditNote(Base):
-    __tablename__ = 'edit_note'
+class RevisionNote(Base):
+    __tablename__ = 'revision_note'
     __table_args__ = {'schema': 'bookbrainz'}
 
-    edit_note_id = Column(Integer, primary_key=True)
+    revision_note_id = Column(Integer, primary_key=True)
 
     user_id = Column(Integer, ForeignKey('bookbrainz.user.user_id'),
                      nullable=False)
-    edit_id = Column(Integer, ForeignKey('bookbrainz.edit.edit_id'),
-                     nullable=False)
+    revision_id = Column(
+        Integer, ForeignKey('bookbrainz.revision.revision_id'), nullable=False
+    )
     content = Column(UnicodeText, nullable=False)
     posted_at = Column(DateTime(timezone=True), nullable=False,
                        server_default=sql.func.now())
