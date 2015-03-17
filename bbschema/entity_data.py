@@ -23,6 +23,16 @@ from sqlalchemy import (Boolean, Column, Date, Enum, ForeignKey, Integer,
                         Table, UnicodeText)
 from sqlalchemy.orm import relationship
 
+entity_data_alias = Table(
+    'entity_data_alias', Base.metadata,
+    Column(
+        'entity_data_id', Integer,
+        ForeignKey('bookbrainz.entity_data.entity_data_id'), primary_key=True
+    ),
+    Column('alias_id', Integer, ForeignKey('bookbrainz.alias.alias_id'),
+           primary_key=True),
+    schema='bookbrainz'
+)
 
 work_data_language_table = Table(
     'work_data_language', Base.metadata,
@@ -53,15 +63,38 @@ class EntityData(Base):
     __tablename__ = 'entity_data'
     __table_args__ = {'schema': 'bookbrainz'}
 
-    entity_data_id = Column(Integer, primary_key=True)
-
-    # For inheritance and url redirection
     _type = Column(Integer, nullable=False)
-
     __mapper_args__ = {
         'polymorphic_identity': 0,
         'polymorphic_on': _type
     }
+
+    entity_data_id = Column(Integer, primary_key=True)
+    derived_data_id = Column(Integer, nullable=False)
+
+    annotation_id = Column(Integer,
+                           ForeignKey('bookbrainz.annotation.annotation_id'))
+    disambiguation_id = Column(
+        Integer, ForeignKey('bookbrainz.disambiguation.disambiguation_id')
+    )
+    default_alias_id = Column(Integer, ForeignKey('bookbrainz.alias.alias_id'))
+
+    annotation = relationship('Annotation')
+    disambiguation = relationship('Disambiguation')
+    aliases = relationship("Alias", secondary=entity_data_alias)
+    default_alias = relationship('Alias', foreign_keys=[default_alias_id])
+
+    def __eq__(self, other):
+        # Assume that other is an EntityData
+        for a, b in zip(self.aliases, other.aliases):
+            if a != b:
+                return False
+
+        return (
+            (self.annotation == other.annotation) and
+            (self.disambiguation == other.disambiguation) and
+            (self.default_alias == other.default_alias)
+        )
 
 
 class PublicationData(EntityData):
