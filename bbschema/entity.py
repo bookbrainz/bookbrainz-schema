@@ -19,7 +19,7 @@
 base class for all resource models specified in this package."""
 
 import sqlalchemy.sql as sql
-from sqlalchemy import (Boolean, Column, DateTime, ForeignKey, Integer,
+from sqlalchemy import (Boolean, Column, DateTime, Enum, ForeignKey, Integer,
                         Table, UnicodeText)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
@@ -27,7 +27,6 @@ from sqlalchemy.sql import text
 
 from .base import Base
 from .entity_data import create_entity_data
-
 
 class Entity(Base):
     """Resource class, from which all other resource models are derived."""
@@ -44,11 +43,46 @@ class Entity(Base):
         Integer, ForeignKey('bookbrainz.entity_revision.revision_id',
                             use_alter=True, name='fk_master_revision_id')
     )
+    type = Column(
+        Enum(
+            'Creator', 'Publication', 'Edition', 'Publisher', 'Work',
+            name='entity_types'
+        ),
+        nullable=False
+    )
 
     master_revision = relationship(
         'EntityRevision', foreign_keys=[master_revision_id], post_update=True
     )
 
+    __mapper_args__ = {
+        'polymorphic_on': type
+    }
+
+class Creator(Entity):
+    __mapper_args__ = {
+        'polymorphic_identity': 'Creator'
+    }
+
+class Publication(Entity):
+    __mapper_args__ = {
+        'polymorphic_identity': 'Publication'
+    }
+
+class Edition(Entity):
+    __mapper_args__ = {
+        'polymorphic_identity': 'Edition'
+    }
+
+class Publisher(Entity):
+    __mapper_args__ = {
+        'polymorphic_identity': 'Publisher'
+    }
+
+class Work(Entity):
+    __mapper_args__ = {
+        'polymorphic_identity': 'Work'
+    }
 
 class EntityRedirect(Base):
     __tablename__ = 'entity_redirect'
