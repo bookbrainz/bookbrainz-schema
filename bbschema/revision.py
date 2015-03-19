@@ -28,7 +28,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.orm.exc import NoResultFound
 
 from .base import Base
-from .entity import Entity, EntityTree
+from .entity import Entity, EntityTree, create_entity
 
 
 class Revision(Base):
@@ -83,7 +83,10 @@ class EntityRevision(Revision):
 
     @classmethod
     def create(cls, user, revision_json):
-        entity = Entity()
+        entity = create_entity(revision_json)
+
+        if entity is None:
+            return None
 
         entity_tree = EntityTree.create(revision_json)
 

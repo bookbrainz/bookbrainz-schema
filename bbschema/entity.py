@@ -28,6 +28,22 @@ from sqlalchemy.sql import text
 from .base import Base
 from .entity_data import create_entity_data
 
+
+def create_entity(revision_json):
+    if 'publication_data' in revision_json:
+        return Publication()
+    elif 'creator_data' in revision_json:
+        return Creator()
+    elif 'edition_data' in revision_json:
+        return Edition()
+    elif 'publisher_data' in revision_json:
+        return Publisher()
+    elif 'work_data' in revision_json:
+        return Work()
+    else:
+        return None
+
+
 class Entity(Base):
     """Resource class, from which all other resource models are derived."""
 
@@ -43,7 +59,7 @@ class Entity(Base):
         Integer, ForeignKey('bookbrainz.entity_revision.revision_id',
                             use_alter=True, name='fk_master_revision_id')
     )
-    type = Column(
+    _type = Column(
         Enum(
             'Creator', 'Publication', 'Edition', 'Publisher', 'Work',
             name='entity_types'
@@ -56,33 +72,39 @@ class Entity(Base):
     )
 
     __mapper_args__ = {
-        'polymorphic_on': type
+        'polymorphic_on': _type
     }
+
 
 class Creator(Entity):
     __mapper_args__ = {
         'polymorphic_identity': 'Creator'
     }
 
+
 class Publication(Entity):
     __mapper_args__ = {
         'polymorphic_identity': 'Publication'
     }
+
 
 class Edition(Entity):
     __mapper_args__ = {
         'polymorphic_identity': 'Edition'
     }
 
+
 class Publisher(Entity):
     __mapper_args__ = {
         'polymorphic_identity': 'Publisher'
     }
 
+
 class Work(Entity):
     __mapper_args__ = {
         'polymorphic_identity': 'Work'
     }
+
 
 class EntityRedirect(Base):
     __tablename__ = 'entity_redirect'
