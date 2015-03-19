@@ -40,7 +40,7 @@ WORK_DATA__LANGUAGE = Table(
     'work_data__language', Base.metadata,
     Column(
         'work_data_id', Integer,
-        ForeignKey('bookbrainz.work_data.derived_data_id'), primary_key=True
+        ForeignKey('bookbrainz.work_data.entity_data_id'), primary_key=True
     ),
     Column(
         'language_id', Integer, ForeignKey('musicbrainz.language.id'),
@@ -61,7 +61,6 @@ class EntityData(Base):
     }
 
     entity_data_id = Column(Integer, primary_key=True)
-    derived_data_id = Column(Integer, nullable=False)
 
     annotation_id = Column(Integer,
                            ForeignKey('bookbrainz.annotation.annotation_id'))
@@ -98,6 +97,8 @@ class EntityData(Base):
         if default_alias is not None:
             new_data.default_alias = default_alias
 
+        return new_data
+
     def update(self, revision_json):
         # Create a new EntityData, copying the current data.
         new_data = self.copy()
@@ -120,13 +121,15 @@ class EntityData(Base):
         )
         copied_data.aliases = self.aliases
 
+        return copied_data
+
 
 class PublicationData(EntityData):
     __tablename__ = 'publication_data'
     __table_args__ = {'schema': 'bookbrainz'}
 
-    derived_data_id = Column(
-        Integer, ForeignKey('bookbrainz.entity_data.derived_data_id'),
+    entity_data_id = Column(
+        Integer, ForeignKey('bookbrainz.entity_data.entity_data_id'),
         primary_key=True
     )
 
@@ -161,13 +164,9 @@ class PublicationData(EntityData):
         return new_data
 
     def update(self, revision_json):
-        if 'publication_data' not in revision_json:
-            return self
-
-        data_json = revision_json['publication_data']
-
         new_data = super(PublicationData, self).update(revision_json)
 
+        data_json = revision_json.get('publication_data', {})
         if 'publication_type_id' in data_json:
             new_data.publication_type_id = data_json['publication_type_id']
 
@@ -196,8 +195,8 @@ class CreatorData(EntityData):
     __tablename__ = 'creator_data'
     __table_args__ = {'schema': 'bookbrainz'}
 
-    derived_data_id = Column(
-        Integer, ForeignKey('bookbrainz.entity_data.derived_data_id'),
+    entity_data_id = Column(
+        Integer, ForeignKey('bookbrainz.entity_data.entity_data_id'),
         primary_key=True
     )
 
@@ -259,13 +258,9 @@ class CreatorData(EntityData):
         return new_data
 
     def update(self, revision_json):
-        if 'creator_data' not in revision_json:
-            return self
-
-        data_json = revision_json['creator_data']
-
         new_data = super(CreatorData, self).update(revision_json)
 
+        data_json = revision_json.get('creator_data', {})
         if 'begin_date' in data_json:
             new_data.begin_date = data_json['begin_date']
         if 'begin_date_precision' in data_json:
@@ -315,8 +310,8 @@ class PublisherData(EntityData):
     __tablename__ = 'publisher_data'
     __table_args__ = {'schema': 'bookbrainz'}
 
-    derived_data_id = Column(
-        Integer, ForeignKey('bookbrainz.entity_data.derived_data_id'),
+    entity_data_id = Column(
+        Integer, ForeignKey('bookbrainz.entity_data.entity_data_id'),
         primary_key=True
     )
 
@@ -367,8 +362,8 @@ class EditionData(EntityData):
     __tablename__ = 'edition_data'
     __table_args__ = {'schema': 'bookbrainz'}
 
-    derived_data_id = Column(
-        Integer, ForeignKey('bookbrainz.entity_data.derived_data_id'),
+    entity_data_id = Column(
+        Integer, ForeignKey('bookbrainz.entity_data.entity_data_id'),
         primary_key=True
     )
 
@@ -426,8 +421,8 @@ class WorkData(EntityData):
     __tablename__ = 'work_data'
     __table_args__ = {'schema': 'bookbrainz'}
 
-    derived_data_id = Column(
-        Integer, ForeignKey('bookbrainz.entity_data.derived_data_id'),
+    entity_data_id = Column(
+        Integer, ForeignKey('bookbrainz.entity_data.entity_data_id'),
         primary_key=True
     )
 

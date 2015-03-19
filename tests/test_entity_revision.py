@@ -79,7 +79,7 @@ class TestRelationshipViews(TestCase):
             filter_by(entity_gid=entity_gid).one()
 
         prev_master_revision_id = entity.master_revision_id
-        prev_alias_id = entity.master_revision.entity_tree.aliases[0].alias_id
+        prev_alias_id = entity.master_revision.entity_data.aliases[0].alias_id
 
         # Now, update it
         user = self.session.query(User).filter_by(user_id=1).one()
