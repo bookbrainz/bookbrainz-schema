@@ -15,7 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from .entity import Entity, EntityRedirect, Annotation, Disambiguation, Alias
+from .entity import (Entity, EntityRedirect,
+                     Annotation, Disambiguation, Alias, Creator, Publication,
+                     Edition, Publisher, Work)
 from .user import (User, UserType, InactiveUser, SuspendedUser, EditorStats,
                    OAuthClient, Message, MessageReceipt, EditorLanguage)
 from .entity_data import (EntityData, PublicationData, PublicationType,
