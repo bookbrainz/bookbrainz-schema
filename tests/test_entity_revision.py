@@ -39,15 +39,14 @@ class TestRelationshipViews(TestCase):
         self.session.commit()
 
         entity = rev.entity
-        entity_tree = rev.entity_tree
+        entity_data = rev.entity_data
 
         # Check properties of entity
         self.assertEquals(entity.master_revision_id, None)
 
-        annotation = entity_tree.annotation
-        disambiguation = entity_tree.disambiguation
-        aliases = entity_tree.aliases
-        data = entity_tree.data
+        annotation = entity_data.annotation
+        disambiguation = entity_data.disambiguation
+        aliases = entity_data.aliases
 
         # Check annotation
         self.assertEqual(annotation.content, u"Testing this entity, so don't actually use this.")
@@ -63,10 +62,10 @@ class TestRelationshipViews(TestCase):
         self.assertEqual(aliases[0].primary, True)
 
         # Check properties of entity_tree
-        self.assertEqual(entity_tree.default_alias_id, None)
+        self.assertEqual(entity_data.default_alias_id, None)
 
         # Check properties of publication_data
-        self.assertEqual(data.publication_type_id, 1)
+        self.assertEqual(entity_data.publication_type_id, 1)
 
         entity.master_revision = rev
         self.session.commit()
@@ -103,15 +102,14 @@ class TestRelationshipViews(TestCase):
         self.session.commit()
 
         entity = rev.entity
-        entity_tree = rev.entity_tree
+        entity_data = rev.entity_data
 
         # Check properties of entity
         self.assertEquals(entity.master_revision_id, prev_master_revision_id)
 
-        annotation = entity_tree.annotation
-        disambiguation = entity_tree.disambiguation
-        aliases = entity_tree.aliases
-        data = entity_tree.data
+        annotation = entity_data.annotation
+        disambiguation = entity_data.disambiguation
+        aliases = entity_data.aliases
 
         # Check annotation
         self.assertEqual(annotation.content, u"Testing this entity, so do actually use this.")
@@ -127,7 +125,7 @@ class TestRelationshipViews(TestCase):
         self.assertEqual(aliases[0].primary, True)
 
         # Check properties of entity_tree
-        self.assertEqual(entity_tree.default_alias_id, aliases[0].alias_id)
+        self.assertEqual(entity_data.default_alias_id, aliases[0].alias_id)
 
         # Check properties of publication_data
-        self.assertEqual(data.publication_type_id, 1)
+        self.assertEqual(entity_data.publication_type_id, 1)

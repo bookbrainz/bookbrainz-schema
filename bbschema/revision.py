@@ -28,7 +28,8 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.orm.exc import NoResultFound
 
 from .base import Base
-from .entity import Entity, EntityTree
+from .entity import Entity
+from .entity_data import create_entity_data
 
 
 class Revision(Base):
@@ -69,13 +70,13 @@ class EntityRevision(Revision):
         UUID(as_uuid=True), ForeignKey('bookbrainz.entity.entity_gid'),
         nullable=False
     )
-    entity_tree_id = Column(
-        Integer, ForeignKey('bookbrainz.entity_tree.entity_tree_id'),
+    entity_data_id = Column(
+        Integer, ForeignKey('bookbrainz.entity_data.entity_data_id'),
         nullable=False
     )
 
     entity = relationship('Entity', foreign_keys=[entity_gid])
-    entity_tree = relationship('EntityTree')
+    entity_data = relationship('EntityData')
 
     __mapper_args__ = {
         'polymorphic_identity': 1,
@@ -85,12 +86,12 @@ class EntityRevision(Revision):
     def create(cls, user, revision_json):
         entity = Entity()
 
-        entity_tree = EntityTree.create(revision_json)
+        entity_data = create_entity_data(revision_json)
 
         revision = cls()
         revision.user = user
         revision.entity = entity
-        revision.entity_tree = entity_tree
+        revision.entity_data = entity_data
 
         return revision
 
@@ -105,17 +106,17 @@ class EntityRevision(Revision):
         if entity.master_revision_id is None:
             return None
 
-        old_tree = entity.master_revision.entity_tree
+        old_data = entity.master_revision.entity_data
 
-        new_tree = old_tree.update(revision_json)
+        new_data = old_data.update(revision_json)
 
-        if new_tree == old_tree:
+        if new_data == old_data:
             return None
 
         revision = cls()
         revision.user = user
         revision.entity = entity
-        revision.entity_tree = new_tree
+        revision.entity_data = new_data
 
         return revision
 
