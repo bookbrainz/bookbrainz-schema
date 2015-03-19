@@ -20,13 +20,12 @@ base class for all resource models specified in this package."""
 
 import sqlalchemy.sql as sql
 from sqlalchemy import (Boolean, Column, DateTime, Enum, ForeignKey, Integer,
-                        Table, UnicodeText)
+                        UnicodeText)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import text
 
 from .base import Base
-from .entity_data import create_entity_data
 
 
 def create_entity(revision_json):
@@ -115,99 +114,6 @@ class EntityRedirect(Base):
         UUID(as_uuid=True), ForeignKey('bookbrainz.entity.entity_gid'),
         nullable=False
     )
-
-
-entity_tree_alias = Table(
-    'entity_tree_alias', Base.metadata,
-    Column(
-        'entity_tree_id', Integer,
-        ForeignKey('bookbrainz.entity_tree.entity_tree_id'), primary_key=True
-    ),
-    Column('alias_id', Integer, ForeignKey('bookbrainz.alias.alias_id'),
-           primary_key=True),
-    schema='bookbrainz'
-)
-
-
-class EntityTree(Base):
-    __tablename__ = 'entity_tree'
-    __table_args__ = {'schema': 'bookbrainz'}
-
-    entity_tree_id = Column(Integer, primary_key=True)
-
-    annotation_id = Column(Integer,
-                           ForeignKey('bookbrainz.annotation.annotation_id'))
-    disambiguation_id = Column(
-        Integer, ForeignKey('bookbrainz.disambiguation.disambiguation_id')
-    )
-
-    data_id = Column(
-        Integer, ForeignKey('bookbrainz.entity_data.entity_data_id'),
-        nullable=False
-    )
-
-    default_alias_id = Column(Integer, ForeignKey('bookbrainz.alias.alias_id'))
-
-    annotation = relationship('Annotation')
-    disambiguation = relationship('Disambiguation')
-    data = relationship('EntityData')
-    aliases = relationship("Alias", secondary=entity_tree_alias)
-    default_alias = relationship('Alias', foreign_keys=[default_alias_id])
-
-    def __eq__(self, other):
-        # Assume that other is an EntityTree
-        for a, b in zip(self.aliases, other.aliases):
-            if a != b:
-                return False
-
-        return (
-            (self.annotation == other.annotation) and
-            (self.disambiguation == other.disambiguation) and
-            (self.data == other.data) and
-            (self.default_alias == other.default_alias)
-        )
-
-    @classmethod
-    def create(cls, revision_json):
-        result = cls()
-        result.data = create_entity_data(revision_json)
-        result.annotation = Annotation.create(revision_json)
-        result.disambiguation = Disambiguation.create(revision_json)
-        result.aliases, default_alias = create_aliases(revision_json)
-
-        if default_alias is not None:
-            result.default_alias = default_alias
-
-        return result
-
-    def update(self, revision_json):
-        # Create a new tree, copying the current tree.
-        new_tree = self.copy()
-
-        # Update the properties with the provided JSON.
-        new_tree.data = self.data.update(revision_json)
-        new_tree.annotation = self.annotation.update(revision_json)
-        new_tree.disambiguation = self.disambiguation.update(revision_json)
-        new_tree.aliases, default_alias =\
-            update_aliases(self.aliases, self.default_alias_id, revision_json)
-
-        if default_alias is not None:
-            new_tree.default_alias = default_alias
-
-        # Now, return the new tree if anything was actually updated, or the old
-        # tree if not.
-        if self == new_tree:
-            return self
-        else:
-            return new_tree
-
-    def copy(self):
-        return EntityTree(
-            annotation_id=self.annotation_id,
-            disambiguation_id=self.disambiguation_id,
-            data_id=self.data_id,
-            default_alias_id=self.default_alias_id
-        )
 
 
 class Annotation(Base):
@@ -361,7 +267,6 @@ def update_aliases(aliases, default_alias_id, revision_json):
                 alias_dict[alias_id] = alias_dict[alias_id].update(alias_json)
                 if alias_json.get('default', False):
                     default_alias = alias_dict[alias_id]
-
 
     if default_alias is None:
         default_alias = alias_dict.get(default_alias_id, None)

@@ -19,13 +19,25 @@
 base class for all resource models specified in this package."""
 
 from bbschema.base import Base
+from bbschema.entity import (Annotation, Disambiguation, create_aliases,
+                             update_aliases)
 from sqlalchemy import (Boolean, Column, Date, Enum, ForeignKey, Integer,
                         Table, UnicodeText)
 from sqlalchemy.orm import relationship
 
+ENTITY_DATA__ALIAS = Table(
+    'entity_data__alias', Base.metadata,
+    Column(
+        'entity_data_id', Integer,
+        ForeignKey('bookbrainz.entity_data.entity_data_id'), primary_key=True
+    ),
+    Column('alias_id', Integer, ForeignKey('bookbrainz.alias.alias_id'),
+           primary_key=True),
+    schema='bookbrainz'
+)
 
-work_data_language_table = Table(
-    'work_data_language', Base.metadata,
+WORK_DATA__LANGUAGE = Table(
+    'work_data__language', Base.metadata,
     Column(
         'work_data_id', Integer,
         ForeignKey('bookbrainz.work_data.entity_data_id'), primary_key=True
@@ -38,30 +50,78 @@ work_data_language_table = Table(
 )
 
 
-def create_entity_data(revision_json):
-    TYPE_MAP = {
-        'publication_data': PublicationData,
-        'creator_data': CreatorData
-    }
-
-    for k, v in TYPE_MAP.items():
-        if k in revision_json:
-            return v.create(revision_json)
-
-
 class EntityData(Base):
     __tablename__ = 'entity_data'
     __table_args__ = {'schema': 'bookbrainz'}
 
-    entity_data_id = Column(Integer, primary_key=True)
-
-    # For inheritance and url redirection
     _type = Column(Integer, nullable=False)
-
     __mapper_args__ = {
         'polymorphic_identity': 0,
         'polymorphic_on': _type
     }
+
+    entity_data_id = Column(Integer, primary_key=True)
+
+    annotation_id = Column(Integer,
+                           ForeignKey('bookbrainz.annotation.annotation_id'))
+    disambiguation_id = Column(
+        Integer, ForeignKey('bookbrainz.disambiguation.disambiguation_id')
+    )
+    default_alias_id = Column(Integer, ForeignKey('bookbrainz.alias.alias_id'))
+
+    annotation = relationship('Annotation')
+    disambiguation = relationship('Disambiguation')
+    aliases = relationship("Alias", secondary=ENTITY_DATA__ALIAS)
+    default_alias = relationship('Alias', foreign_keys=[default_alias_id])
+
+    def __eq__(self, other):
+        # Assume that other is an EntityData
+        for left, right in zip(self.aliases, other.aliases):
+            if left != right:
+                return False
+
+        return (
+            (self.annotation == other.annotation) and
+            (self.disambiguation == other.disambiguation) and
+            (self.default_alias == other.default_alias)
+        )
+
+    @classmethod
+    def create(cls, revision_json):
+        new_data = cls()
+
+        new_data.annotation = Annotation.create(revision_json)
+        new_data.disambiguation = Disambiguation.create(revision_json)
+        new_data.aliases, default_alias = create_aliases(revision_json)
+
+        if default_alias is not None:
+            new_data.default_alias = default_alias
+
+        return new_data
+
+    def update(self, revision_json):
+        # Create a new EntityData, copying the current data.
+        new_data = self.copy()
+
+        new_data.annotation = self.annotation.update(revision_json)
+        new_data.disambiguation = self.disambiguation.update(revision_json)
+        new_data.aliases, default_alias =\
+            update_aliases(self.aliases, self.default_alias_id, revision_json)
+
+        if default_alias is not None:
+            new_data.default_alias = default_alias
+
+        return new_data
+
+    def copy(self):
+        copied_data = type(self)(
+            annotation_id=self.annotation_id,
+            disambiguation_id=self.disambiguation_id,
+            default_alias_id=self.default_alias_id
+        )
+        copied_data.aliases = self.aliases
+
+        return copied_data
 
 
 class PublicationData(EntityData):
@@ -83,31 +143,44 @@ class PublicationData(EntityData):
         'polymorphic_identity': 1,
     }
 
+    def __eq__(self, other):
+        if (self.publication_type_id == other.publication_type_id and
+                super(PublicationData, self).__eq__(other)):
+            return True
+
+        return False
+
     @classmethod
     def create(cls, revision_json):
         if 'publication_data' not in revision_json:
             return None
 
-        data = revision_json['publication_data']
+        data_json = revision_json['publication_data']
 
-        return cls(
-            publication_type_id=data.get('publication_type_id')
-        )
+        new_data = super(PublicationData, cls).create(revision_json)
 
-    def update(self, revision_json):
-        if 'publication_data' not in revision_json:
-            return self
-
-        data = revision_json['publication_data']
-
-        new_data = self.copy()
-        if 'publication_type_id' in data:
-            new_data.publication_type_id = data['publication_type_id']
+        new_data.publication_type_id = data_json.get('publication_type_id')
 
         return new_data
 
+    def update(self, revision_json):
+        new_data = super(PublicationData, self).update(revision_json)
+
+        data_json = revision_json.get('publication_data', {})
+        if 'publication_type_id' in data_json:
+            new_data.publication_type_id = data_json['publication_type_id']
+
+        if new_data == self:
+            return self
+        else:
+            return new_data
+
     def copy(self):
-        return PublicationData(publication_type_id=self.publication_type_id)
+        copied_data = super(PublicationData, self).copy()
+
+        copied_data.publication_type_id = self.publication_type_id
+
+        return copied_data
 
 
 class PublicationType(Base):
@@ -150,6 +223,20 @@ class CreatorData(EntityData):
         'polymorphic_identity': 2,
     }
 
+    def __eq__(self, other):
+        if (self.begin_date == other.begin_date and
+                self.begin_date_precision == other.begin_date_precision and
+                self.end_date == other.end_date and
+                self.end_date_precision == other.end_date_precision and
+                self.ended == other.ended and
+                self.country_id == other.country_id and
+                self.gender_id == other.gender_id and
+                self.creator_type_id == other.creator_type_id and
+                super(CreatorData, self).__eq__(other)):
+            return True
+
+        return False
+
     @classmethod
     def create(cls, revision_json):
         if 'creator_data' not in revision_json:
@@ -157,54 +244,58 @@ class CreatorData(EntityData):
 
         data = revision_json['creator_data']
 
-        return cls(
-            begin_date=data.get('begin_date'),
-            begin_date_precision=data.get('begin_date_precision'),
-            end_date=data.get('end_date'),
-            end_date_precision=data.get('end_date_precision'),
-            ended=data.get('ended', False),
-            county_id=data.get('country_id'),
-            gender_id=data.get('gender_id'),
-            creator_type_id=data.get('creator_type_id')
-        )
+        new_data = super(CreatorData, cls).create(revision_json)
 
-    def update(self, revision_json):
-        if 'creator_data' not in revision_json:
-            return self
-
-        data = revision_json['creator_data']
-
-        new_data = self.copy()
-        if 'begin_date' in data:
-            new_data.begin_date = data['begin_date']
-        if 'begin_date_precision' in data:
-            new_data.begin_date_precision = data['begin_date_precision']
-        if 'end_date' in data:
-            new_data.end_date = data['end_date']
-        if 'end_date_precision' in data:
-            new_data.end_date_precision = data['end_date_precision']
-        if 'ended' in data:
-            new_data.ended = data['ended']
-        if 'county_id' in data:
-            new_data.country_id = data['country_id']
-        if 'gender_id' in data:
-            new_data.gender_id = data['gender_id']
-        if 'creator_type_id' in data:
-            new_data.creator_type_id = data['creator_type_id']
+        new_data.begin_date = data.get('begin_date')
+        new_data.begin_date_precision = data.get('begin_date_precision')
+        new_data.end_date = data.get('end_date')
+        new_data.end_date_precision = data.get('end_date_precision')
+        new_data.ended = data.get('ended', False)
+        new_data.county_id = data.get('country_id')
+        new_data.gender_id = data.get('gender_id')
+        new_data.creator_type_id = data.get('creator_type_id')
 
         return new_data
 
+    def update(self, revision_json):
+        new_data = super(CreatorData, self).update(revision_json)
+
+        data_json = revision_json.get('creator_data', {})
+        if 'begin_date' in data_json:
+            new_data.begin_date = data_json['begin_date']
+        if 'begin_date_precision' in data_json:
+            new_data.begin_date_precision = data_json['begin_date_precision']
+        if 'end_date' in data_json:
+            new_data.end_date = data_json['end_date']
+        if 'end_date_precision' in data_json:
+            new_data.end_date_precision = data_json['end_date_precision']
+        if 'ended' in data_json:
+            new_data.ended = data_json['ended']
+        if 'county_id' in data_json:
+            new_data.country_id = data_json['country_id']
+        if 'gender_id' in data_json:
+            new_data.gender_id = data_json['gender_id']
+        if 'creator_type_id' in data_json:
+            new_data.creator_type_id = data_json['creator_type_id']
+
+        if new_data == self:
+            return self
+        else:
+            return new_data
+
     def copy(self):
-        return CreatorData(
-            begin_date=self.begin_date,
-            begin_date_precision=self.begin_date_precision,
-            end_date=self.end_date,
-            end_date_precision=self.end_date_precision,
-            ended=self.ended,
-            county_id=self.country_id,
-            gender_id=self.gender_id,
-            creator_type_id=self.creator_type_id
-        )
+        copied_data = super(CreatorData, self).copy()
+
+        copied_data.begin_date = self.begin_date,
+        copied_data.begin_date_precision = self.begin_date_precision,
+        copied_data.end_date = self.end_date,
+        copied_data.end_date_precision = self.end_date_precision,
+        copied_data.ended = self.ended,
+        copied_data.county_id = self.country_id,
+        copied_data.gender_id = self.gender_id,
+        copied_data.creator_type_id = self.creator_type_id
+
+        return copied_data
 
 
 class CreatorType(Base):
@@ -246,15 +337,17 @@ class PublisherData(EntityData):
     }
 
     def copy(self):
-        return PublisherData(
-            begin_date=self.begin_date,
-            begin_date_precision=self.begin_date_precision,
-            end_date=self.end_date,
-            end_date_precision=self.end_date_precision,
-            ended=self.ended,
-            country_id=self.country_id,
-            publisher_type_id=self.publisher_type_id,
-        )
+        copied_data = super(CreatorData, self).copy()
+
+        copied_data.begin_date = self.begin_date
+        copied_data.begin_date_precision = self.begin_date_precision
+        copied_data.end_date = self.end_date
+        copied_data.end_date_precision = self.end_date_precision
+        copied_data.ended = self.ended
+        copied_data.country_id = self.country_id
+        copied_data.publisher_type_id = self.publisher_type_id
+
+        return copied_data
 
 
 class PublisherType(Base):
@@ -302,16 +395,18 @@ class EditionData(EntityData):
     }
 
     def copy(self):
-        return EditionData(
-            begin_date=self.begin_date,
-            begin_date_precision=self.begin_date_precision,
-            end_date=self.end_date,
-            end_date_precision=self.end_date_precision,
-            ended=self.ended,
-            edition_status_id=self.edition_status_id,
-            country_id=self.country_id,
-            language_id=self.language_id,
-        )
+        copied_data = super(CreatorData, self).copy()
+
+        copied_data.begin_date = self.begin_date
+        copied_data.begin_date_precision = self.begin_date_precision
+        copied_data.end_date = self.end_date
+        copied_data.end_date_precision = self.end_date_precision
+        copied_data.ended = self.ended
+        copied_data.edition_status_id = self.edition_status_id
+        copied_data.country_id = self.country_id
+        copied_data.language_id = self.language_id
+
+        return copied_data
 
 
 class EditionStatus(Base):
@@ -335,21 +430,19 @@ class WorkData(EntityData):
                           ForeignKey('bookbrainz.work_type.work_type_id'))
 
     work_type = relationship('WorkType')
-    languages = relationship('Language', secondary=work_data_language_table)
+    languages = relationship('Language', secondary=WORK_DATA__LANGUAGE)
 
     __mapper_args__ = {
         'polymorphic_identity': 5,
     }
 
     def copy(self):
-        result = WorkData(
-            work_type_id=self.work_type_id,
-        )
+        copied_data = super(CreatorData, self).copy()
 
-        # Copy languages
-        result.languages = self.languages
+        copied_data.work_type_id = self.work_type_id
+        copied_data.languages = self.languages
 
-        return result
+        return copied_data
 
 
 class WorkType(Base):
@@ -358,3 +451,15 @@ class WorkType(Base):
 
     work_type_id = Column(Integer, primary_key=True)
     label = Column(UnicodeText, nullable=False, unique=True)
+
+
+TYPE_MAP = {
+    'publication_data': PublicationData,
+    'creator_data': CreatorData
+}
+
+
+def create_entity_data(revision_json):
+    for key, data_type in TYPE_MAP.items():
+        if key in revision_json:
+            return data_type.create(revision_json)
