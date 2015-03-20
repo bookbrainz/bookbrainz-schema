@@ -2,7 +2,6 @@
 
 from distutils.core import setup, Command
 import unittest
-import tests
 import sys
 
 class test_cmd(Command):
@@ -16,6 +15,7 @@ class test_cmd(Command):
         pass
 
     def run(self):
+        import tests
         unittest.main(tests, argv=sys.argv[:-1])
 
 
