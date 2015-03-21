@@ -30,8 +30,7 @@ from sqlalchemy.sql import select
 
 from .base import Base
 
-from .entity import Entity, create_entity
-from .entity_data import create_entity_data
+from .entity import Entity
 
 
 class RevisionNote(Base):
@@ -109,16 +108,12 @@ class EntityRevision(Revision):
     }
 
     @classmethod
-    def create(cls, user, revision_json):
-        entity = create_entity(revision_json)
-
-        if entity is None:
+    def create(cls, user_id, entity, entity_data):
+        if entity is None or entity_data is None:
             return None
 
-        entity_data = create_entity_data(revision_json)
-
         revision = cls()
-        revision.user = user
+        revision.user_id = user_id
         revision.entity = entity
         revision.entity_data = entity_data
 

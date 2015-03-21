@@ -238,22 +238,17 @@ class CreatorData(EntityData):
         return False
 
     @classmethod
-    def create(cls, revision_json):
-        if 'creator_data' not in revision_json:
-            return None
+    def create(cls, json):
+        new_data = super(CreatorData, cls).create(json)
 
-        data = revision_json['creator_data']
-
-        new_data = super(CreatorData, cls).create(revision_json)
-
-        new_data.begin_date = data.get('begin_date')
-        new_data.begin_date_precision = data.get('begin_date_precision')
-        new_data.end_date = data.get('end_date')
-        new_data.end_date_precision = data.get('end_date_precision')
-        new_data.ended = data.get('ended', False)
-        new_data.county_id = data.get('country_id')
-        new_data.gender_id = data.get('gender_id')
-        new_data.creator_type_id = data.get('creator_type_id')
+        new_data.begin_date = json.get('begin_date')
+        new_data.begin_date_precision = json.get('begin_date_precision')
+        new_data.end_date = json.get('end_date')
+        new_data.end_date_precision = json.get('end_date_precision')
+        new_data.ended = json.get('ended', False)
+        new_data.country_id = json.get('country_id')
+        new_data.gender_id = json.get('gender.gender_id')
+        new_data.creator_type_id = json.get('creator_type.creator_type_id')
 
         return new_data
 
@@ -451,15 +446,3 @@ class WorkType(Base):
 
     work_type_id = Column(Integer, primary_key=True)
     label = Column(UnicodeText, nullable=False, unique=True)
-
-
-TYPE_MAP = {
-    'publication_data': PublicationData,
-    'creator_data': CreatorData
-}
-
-
-def create_entity_data(revision_json):
-    for key, data_type in TYPE_MAP.items():
-        if key in revision_json:
-            return data_type.create(revision_json)

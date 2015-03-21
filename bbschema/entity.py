@@ -28,21 +28,6 @@ from sqlalchemy.sql import text
 from .base import Base
 
 
-def create_entity(revision_json):
-    if 'publication_data' in revision_json:
-        return Publication()
-    elif 'creator_data' in revision_json:
-        return Creator()
-    elif 'edition_data' in revision_json:
-        return Edition()
-    elif 'publisher_data' in revision_json:
-        return Publisher()
-    elif 'work_data' in revision_json:
-        return Work()
-    else:
-        return None
-
-
 class Entity(Base):
     """Resource class, from which all other resource models are derived."""
 
