@@ -26,11 +26,30 @@ from sqlalchemy import (Column, DateTime, ForeignKey, Integer, SmallInteger,
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.sql import select
 
 from .base import Base
 
 from .entity import Entity, create_entity
 from .entity_data import create_entity_data
+
+
+class RevisionNote(Base):
+    __tablename__ = 'revision_note'
+    __table_args__ = {'schema': 'bookbrainz'}
+
+    revision_note_id = Column(Integer, primary_key=True)
+
+    user_id = Column(Integer, ForeignKey('bookbrainz.user.user_id'),
+                     nullable=False)
+    revision_id = Column(
+        Integer, ForeignKey('bookbrainz.revision.revision_id'), nullable=False
+    )
+    content = Column(UnicodeText, nullable=False)
+    posted_at = Column(DateTime(timezone=True), nullable=False,
+                       server_default=sql.func.now())
+
+    user = relationship('User')
 
 
 class Revision(Base):
@@ -45,6 +64,12 @@ class Revision(Base):
                         server_default=sql.func.now())
 
     parent_id = Column(Integer, ForeignKey('bookbrainz.revision.revision_id'))
+
+    note = sqlalchemy.orm.column_property(
+               select([RevisionNote.content]).where(
+                   RevisionNote.revision_id == revision_id
+               ).order_by(RevisionNote.posted_at).limit(1)
+           )
 
     notes = relationship('RevisionNote')
     user = relationship('User', backref='revisions')
@@ -150,21 +175,3 @@ class RelationshipRevision(Revision):
     __mapper_args__ = {
         'polymorphic_identity': 2,
     }
-
-
-class RevisionNote(Base):
-    __tablename__ = 'revision_note'
-    __table_args__ = {'schema': 'bookbrainz'}
-
-    revision_note_id = Column(Integer, primary_key=True)
-
-    user_id = Column(Integer, ForeignKey('bookbrainz.user.user_id'),
-                     nullable=False)
-    revision_id = Column(
-        Integer, ForeignKey('bookbrainz.revision.revision_id'), nullable=False
-    )
-    content = Column(UnicodeText, nullable=False)
-    posted_at = Column(DateTime(timezone=True), nullable=False,
-                       server_default=sql.func.now())
-
-    user = relationship('User')
