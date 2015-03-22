@@ -151,15 +151,10 @@ class PublicationData(EntityData):
         return False
 
     @classmethod
-    def create(cls, revision_json):
-        if 'publication_data' not in revision_json:
-            return None
+    def create(cls, json):
+        new_data = super(PublicationData, cls).create(json)
 
-        data_json = revision_json['publication_data']
-
-        new_data = super(PublicationData, cls).create(revision_json)
-
-        new_data.publication_type_id = data_json.get('publication_type_id')
+        new_data.publication_type_id = json.get('publication_type', {}).get('publication_type_id')
 
         return new_data
 
@@ -248,7 +243,7 @@ class CreatorData(EntityData):
         new_data.ended = json.get('ended', False)
         new_data.country_id = json.get('country_id')
         new_data.gender_id = json.get('gender.gender_id')
-        new_data.creator_type_id = json.get('creator_type.creator_type_id')
+        new_data.creator_type_id = json.get('creator_type', {}).get('creator_type_id')
 
         return new_data
 
