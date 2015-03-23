@@ -242,7 +242,7 @@ class CreatorData(EntityData):
         new_data.end_date_precision = json.get('end_date_precision')
         new_data.ended = json.get('ended', False)
         new_data.country_id = json.get('country_id')
-        new_data.gender_id = json.get('gender.gender_id')
+        new_data.gender_id = json.get('gender', {}).get('gender_id')
         new_data.creator_type_id = json.get('creator_type', {}).get('creator_type_id')
 
         return new_data
