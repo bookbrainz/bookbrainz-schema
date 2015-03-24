@@ -87,12 +87,12 @@ class EntityData(Base):
         )
 
     @classmethod
-    def create(cls, revision_json):
+    def create(cls, json):
         new_data = cls()
 
-        new_data.annotation = Annotation.create(revision_json)
-        new_data.disambiguation = Disambiguation.create(revision_json)
-        new_data.aliases, default_alias = create_aliases(revision_json)
+        new_data.annotation = Annotation.create(json)
+        new_data.disambiguation = Disambiguation.create(json)
+        new_data.aliases, default_alias = create_aliases(json)
 
         if default_alias is not None:
             new_data.default_alias = default_alias
@@ -151,10 +151,11 @@ class PublicationData(EntityData):
         return False
 
     @classmethod
-    def create(cls, json):
+    def create(cls, session, json):
         new_data = super(PublicationData, cls).create(json)
 
-        new_data.publication_type_id = json.get('publication_type', {}).get('publication_type_id')
+        new_data.publication_type_id =\
+            json.get('publication_type', {}).get('publication_type_id')
 
         return new_data
 
@@ -233,7 +234,7 @@ class CreatorData(EntityData):
         return False
 
     @classmethod
-    def create(cls, json):
+    def create(cls, session, json):
         new_data = super(CreatorData, cls).create(json)
 
         new_data.begin_date = json.get('begin_date')
@@ -243,7 +244,8 @@ class CreatorData(EntityData):
         new_data.ended = json.get('ended', False)
         new_data.country_id = json.get('country_id')
         new_data.gender_id = json.get('gender', {}).get('gender_id')
-        new_data.creator_type_id = json.get('creator_type', {}).get('creator_type_id')
+        new_data.creator_type_id =\
+            json.get('creator_type', {}).get('creator_type_id')
 
         return new_data
 
@@ -261,7 +263,7 @@ class CreatorData(EntityData):
             new_data.end_date_precision = data_json['end_date_precision']
         if 'ended' in data_json:
             new_data.ended = data_json['ended']
-        if 'county_id' in data_json:
+        if 'country_id' in data_json:
             new_data.country_id = data_json['country_id']
         if 'gender_id' in data_json:
             new_data.gender_id = data_json['gender_id']
@@ -326,8 +328,60 @@ class PublisherData(EntityData):
         'polymorphic_identity': 3,
     }
 
+    def __eq__(self, other):
+        if (self.begin_date == other.begin_date and
+                self.begin_date_precision == other.begin_date_precision and
+                self.end_date == other.end_date and
+                self.end_date_precision == other.end_date_precision and
+                self.ended == other.ended and
+                self.country_id == other.country_id and
+                self.publisher_type_id == other.publisher_type_id and
+                super(PublisherData, self).__eq__(other)):
+            return True
+
+        return False
+
+    @classmethod
+    def create(cls, json):
+        new_data = super(PublisherData, cls).create(json)
+
+        new_data.begin_date = json.get('begin_date')
+        new_data.begin_date_precision = json.get('begin_date_precision')
+        new_data.end_date = json.get('end_date')
+        new_data.end_date_precision = json.get('end_date_precision')
+        new_data.ended = json.get('ended', False)
+        new_data.country_id = json.get('country_id')
+        new_data.publisher_type_id =\
+            json.get('publisher_type', {}).get('publisher_type_id')
+
+        return new_data
+
+    def update(self, session, revision_json):
+        new_data = super(PublisherData, self).update(revision_json)
+
+        data_json = revision_json.get('publisher_data', {})
+        if 'begin_date' in data_json:
+            new_data.begin_date = data_json['begin_date']
+        if 'begin_date_precision' in data_json:
+            new_data.begin_date_precision = data_json['begin_date_precision']
+        if 'end_date' in data_json:
+            new_data.end_date = data_json['end_date']
+        if 'end_date_precision' in data_json:
+            new_data.end_date_precision = data_json['end_date_precision']
+        if 'ended' in data_json:
+            new_data.ended = data_json['ended']
+        if 'country_id' in data_json:
+            new_data.country_id = data_json['country_id']
+        if 'publisher_type_id' in data_json:
+            new_data.publisher_type_id = data_json['publisher_type_id']
+
+        if new_data == self:
+            return self
+        else:
+            return new_data
+
     def copy(self):
-        copied_data = super(CreatorData, self).copy()
+        copied_data = super(PublisherData, self).copy()
 
         copied_data.begin_date = self.begin_date
         copied_data.begin_date_precision = self.begin_date_precision
@@ -384,6 +438,62 @@ class EditionData(EntityData):
         'polymorphic_identity': 4,
     }
 
+    def __eq__(self, other):
+        if (self.begin_date == other.begin_date and
+                self.begin_date_precision == other.begin_date_precision and
+                self.end_date == other.end_date and
+                self.end_date_precision == other.end_date_precision and
+                self.ended == other.ended and
+                self.country_id == other.country_id and
+                self.edition_status_id == other.edition_status_id and
+                self.language_id == other.language_id and
+                super(EditionData, self).__eq__(other)):
+            return True
+
+        return False
+
+    @classmethod
+    def create(cls, session, json):
+        new_data = super(EditionData, cls).create(json)
+
+        new_data.begin_date = json.get('begin_date')
+        new_data.begin_date_precision = json.get('begin_date_precision')
+        new_data.end_date = json.get('end_date')
+        new_data.end_date_precision = json.get('end_date_precision')
+        new_data.ended = json.get('ended', False)
+        new_data.country_id = json.get('country_id')
+        new_data.language_id = json.get('language_id')
+        new_data.edition_status_id =\
+            json.get('edition_status', {}).get('edition_status_id')
+
+        return new_data
+
+    def update(self, revision_json):
+        new_data = super(PublisherData, self).update(revision_json)
+
+        data_json = revision_json.get('edition_data', {})
+        if 'begin_date' in data_json:
+            new_data.begin_date = data_json['begin_date']
+        if 'begin_date_precision' in data_json:
+            new_data.begin_date_precision = data_json['begin_date_precision']
+        if 'end_date' in data_json:
+            new_data.end_date = data_json['end_date']
+        if 'end_date_precision' in data_json:
+            new_data.end_date_precision = data_json['end_date_precision']
+        if 'ended' in data_json:
+            new_data.ended = data_json['ended']
+        if 'country_id' in data_json:
+            new_data.country_id = data_json['country_id']
+        if 'edition_status_id' in data_json:
+            new_data.edition_status_id = data_json['edition_status_id']
+        if 'language_id' in data_json:
+            new_data.language_id = data_json['language_id']
+
+        if new_data == self:
+            return self
+        else:
+            return new_data
+
     def copy(self):
         copied_data = super(CreatorData, self).copy()
 
@@ -425,6 +535,61 @@ class WorkData(EntityData):
     __mapper_args__ = {
         'polymorphic_identity': 5,
     }
+
+    def __eq__(self, other):
+        if (self.work_type_id == other.work_type_id and
+                self.languages == other.languages
+                super(WorkData, self).__eq__(other)):
+            return True
+
+        return False
+
+    @classmethod
+    def create(cls, session, json):
+        new_data = super(EditionData, cls).create(json)
+
+        new_data.begin_date = json.get('begin_date')
+        new_data.begin_date_precision = json.get('begin_date_precision')
+        new_data.end_date = json.get('end_date')
+        new_data.end_date_precision = json.get('end_date_precision')
+        new_data.ended = json.get('ended', False)
+        new_data.country_id = json.get('country_id')
+        new_data.language_id = json.get('language_id')
+        new_data.work_type_id =\
+            json.get('work_type', {}).get('work_type_id')
+
+        for language_id in json.get('languages', []):
+            language = session.query(Language).get(language_id)
+            if language is not None:
+                new_data.languages.append(language)
+
+        return new_data
+
+    def update(self, revision_json):
+        new_data = super(PublisherData, self).update(revision_json)
+
+        data_json = revision_json.get('edition_data', {})
+        if 'begin_date' in data_json:
+            new_data.begin_date = data_json['begin_date']
+        if 'begin_date_precision' in data_json:
+            new_data.begin_date_precision = data_json['begin_date_precision']
+        if 'end_date' in data_json:
+            new_data.end_date = data_json['end_date']
+        if 'end_date_precision' in data_json:
+            new_data.end_date_precision = data_json['end_date_precision']
+        if 'ended' in data_json:
+            new_data.ended = data_json['ended']
+        if 'country_id' in data_json:
+            new_data.country_id = data_json['country_id']
+        if 'edition_status_id' in data_json:
+            new_data.edition_status_id = data_json['edition_status_id']
+        if 'language_id' in data_json:
+            new_data.language_id = data_json['language_id']
+
+        if new_data == self:
+            return self
+        else:
+            return new_data
 
     def copy(self):
         copied_data = super(CreatorData, self).copy()
