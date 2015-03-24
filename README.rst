@@ -1,8 +1,8 @@
 schema
 ======
 
-.. image:: https://travis-ci.org/BookBrainz/bookbrainz-schema.svg?branch=master
-    :target: https://travis-ci.org/BookBrainz/bookbrainz-schema
+.. image:: https://travis-ci.org/bookbrainz/bookbrainz-schema.svg?branch=master
+    :target: https://travis-ci.org/bookbrainz/bookbrainz-schema
 
 This package contains the SQLAlchemy models mapping the BookBrainz database
 schema to Python objects. It is likely to change considerably during the early
