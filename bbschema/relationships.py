@@ -54,8 +54,7 @@ class RelationshipType(Base):
     child_order = Column(Integer, nullable=False, server_default=text('0'))
 
     description = Column(UnicodeText, nullable=False)
-    forward_template = Column(UnicodeText, nullable=False)
-    reverse_template = Column(UnicodeText, nullable=False)
+    template = Column(UnicodeText, nullable=False)
 
     deprecated = Column(Boolean, nullable=False, server_default=sql.false())
 
