@@ -21,6 +21,7 @@ base class for all resource models specified in this package."""
 from bbschema.base import Base
 from bbschema.entity import (Annotation, Disambiguation, create_aliases,
                              update_aliases)
+from bbschema.musicbrainz import Language
 from sqlalchemy import (Boolean, Column, Date, Enum, ForeignKey, Integer,
                         Table, UnicodeText)
 from sqlalchemy.orm import relationship
@@ -87,7 +88,7 @@ class EntityData(Base):
         )
 
     @classmethod
-    def create(cls, json):
+    def create(cls, session, json):
         new_data = cls()
 
         new_data.annotation = Annotation.create(json)
@@ -152,7 +153,7 @@ class PublicationData(EntityData):
 
     @classmethod
     def create(cls, session, json):
-        new_data = super(PublicationData, cls).create(json)
+        new_data = super(PublicationData, cls).create(session, json)
 
         new_data.publication_type_id =\
             json.get('publication_type', {}).get('publication_type_id')
@@ -235,7 +236,7 @@ class CreatorData(EntityData):
 
     @classmethod
     def create(cls, session, json):
-        new_data = super(CreatorData, cls).create(json)
+        new_data = super(CreatorData, cls).create(session, json)
 
         new_data.begin_date = json.get('begin_date')
         new_data.begin_date_precision = json.get('begin_date_precision')
@@ -343,7 +344,7 @@ class PublisherData(EntityData):
 
     @classmethod
     def create(cls, json):
-        new_data = super(PublisherData, cls).create(json)
+        new_data = super(PublisherData, cls).create(session, json)
 
         new_data.begin_date = json.get('begin_date')
         new_data.begin_date_precision = json.get('begin_date_precision')
@@ -454,7 +455,7 @@ class EditionData(EntityData):
 
     @classmethod
     def create(cls, session, json):
-        new_data = super(EditionData, cls).create(json)
+        new_data = super(EditionData, cls).create(session, json)
 
         new_data.begin_date = json.get('begin_date')
         new_data.begin_date_precision = json.get('begin_date_precision')
@@ -538,7 +539,7 @@ class WorkData(EntityData):
 
     def __eq__(self, other):
         if (self.work_type_id == other.work_type_id and
-                self.languages == other.languages
+                self.languages == other.languages and
                 super(WorkData, self).__eq__(other)):
             return True
 
@@ -546,7 +547,7 @@ class WorkData(EntityData):
 
     @classmethod
     def create(cls, session, json):
-        new_data = super(EditionData, cls).create(json)
+        new_data = super(EditionData, cls).create(session, json)
 
         new_data.begin_date = json.get('begin_date')
         new_data.begin_date_precision = json.get('begin_date_precision')

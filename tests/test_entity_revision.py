@@ -1,8 +1,10 @@
 from unittest import TestCase
+
+from bbschema import (Entity, EntityRevision, Publication, PublicationData,
+                      User, config)
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from bbschema import EntityRevision, User, Entity, config
 
 class TestRelationshipViews(TestCase):
 
@@ -17,9 +19,9 @@ class TestRelationshipViews(TestCase):
 
     def test_create_publication(self):
         user = self.session.query(User).filter_by(user_id=1).one()
-        rev = EntityRevision.create(user, {
+        revision_json = {
             'entity_gid': [],
-            'publication_data': {
+            'publication_type': {
                 'publication_type_id': 1
             },
             'annotation': u"Testing this entity, so don't actually use this.",
@@ -33,7 +35,12 @@ class TestRelationshipViews(TestCase):
                     'primary': True
                 }
             ]
-        })
+        }
+
+        entity = Publication()
+        entity_data = PublicationData.create(self.session, revision_json)
+
+        rev = EntityRevision.create(user.user_id, entity, entity_data)
 
         self.session.add(rev)
         self.session.commit()

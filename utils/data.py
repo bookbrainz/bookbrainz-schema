@@ -71,44 +71,37 @@ def create_fixed(hostname, port, username, password, db_name):
         RelationshipType(
             label='Worked on',
             description='Indicates that a creator worked on a work',
-            reverse_template='{{{entities.0}}} worked on {{{entities.1}}}',
-            forward_template='{{{entities.0}}} worked on {{{entities.1}}}',
+            template='{{{entities.0}}} worked on {{{entities.1}}}',
         ),
         RelationshipType(
             label='Illustrated',
             description='Indicates that a creator illustrated an edition',
-            reverse_template='{{{entities.0}}} illustrated {{{entities.1}}}',
-            forward_template='{{{entities.0}}} illustrated {{{entities.1}}}',
+            template='{{{entities.0}}} illustrated {{{entities.1}}}',
         ),
         RelationshipType(
             label='Edition',
             description='Represents the relationship between an edition and publication',
-            reverse_template='{{{entities.0}}} is an edition of {{{entities.1}}}',
-            forward_template='{{{entities.0}}} is an edition of {{{entities.1}}}',
+            template='{{{entities.0}}} is an edition of {{{entities.1}}}',
         ),
         RelationshipType(
             label='Publisher',
             description='Indicates that a publisher published an edition',
-            reverse_template='{{{entities.0}}} published {{{entities.1}}}',
-            forward_template='{{{entities.0}}} published {{{entities.1}}}',
+            template='{{{entities.0}}} published {{{entities.1}}}',
         ),
         RelationshipType(
             label='Editor',
             description='Indicates that a creator edited an edition',
-            forward_template='{{{entities.0}}} edited {{{entities.1}}}',
-            reverse_template='{{{entities.0}}} edited {{{entities.1}}}',
+            template='{{{entities.0}}} edited {{{entities.1}}}',
         ),
         RelationshipType(
             label='Inspiration',
             description='Indicates that one work was the inspiration for another work',
-            forward_template='{{{entities.0}}} was the inspiration for {{{entities.1}}}',
-            reverse_template='{{{entities.0}}} was the inspiration for {{{entities.1}}}',
+            template='{{{entities.0}}} was the inspiration for {{{entities.1}}}',
         ),
         RelationshipType(
             label='Parody',
             description='Indicates that one work was the inspiration for another work',
-            forward_template='{{{entities.0}}} was the inspiration for {{{entities.1}}}',
-            reverse_template='{{{entities.0}}} was the inspiration for {{{entities.1}}}',
+            template='{{{entities.0}}} was the inspiration for {{{entities.1}}}',
         ),
     ]
 
@@ -116,15 +109,13 @@ def create_fixed(hostname, port, username, password, db_name):
         RelationshipType(
             label='Authored',
             description='Indicates that a creator is the author of a work',
-            forward_template='{{{entities.0}}} authored {{{entities.1}}}',
-            reverse_template='{{{entities.0}}} authored {{{entities.1}}}',
+            template='{{{entities.0}}} authored {{{entities.1}}}',
             child_order=1,
         ),
         RelationshipType(
             label='Translated',
             description='Indicates that a creator translated a work',
-            forward_template='{{{entities.0}}} translated {{{entities.1}}} to {{{entities.2}}}',
-            reverse_template='{{{entities.0}}} translated {{{entities.1}}} to {{{entities.2}}}',
+            template='{{{entities.0}}} translated {{{entities.1}}} to {{{entities.2}}}',
             child_order=2,
         ),
     ]
@@ -165,46 +156,55 @@ def create_test(hostname, port, username, password, db_name):
     session.add_all(languages)
 
     # Create some entities
-    revision1 = EntityRevision.create(user1, {
-        'entity_gid': [],
-        'publication_data': {
-            'publication_type_id': book_type.publication_type_id
+
+    revision_jsons = [
+        {
+            'entity_gid': [],
+            'publication_data': {
+                'publication_type_id': book_type.publication_type_id
+            },
+            'annotation': u"Testing this entity, so don't actually use this.",
+            'disambiguation': u'book by Natsuo Kirino',
+            'aliases': [
+                {
+                    'name': u'アウト',
+                    'sort_name': u'アウト',
+                    'language_id': 1,
+                    'default': True,
+                    'primary': True
+                },
+                {
+                    'name': u'Out',
+                    'sort_name': u'Out',
+                    'language_id': 1,
+                    'default': True,
+                    'primary': True
+                },
+                {
+                    'name': u'Le quattro casalinghe di Tokyo',
+                    'sort_name': u'Le quattro casalinghe di Tokyo',
+                    'language_id': 1,
+                    'default': True,
+                    'primary': True
+                },
+                {
+                    'name': u'De nachtploeg',
+                    'sort_name': u'De nachtploeg',
+                    'language_id': 1,
+                    'default': True,
+                    'primary': True
+                }
+            ]
         },
-        'annotation': u"Testing this entity, so don't actually use this.",
-        'disambiguation': u'book by Natsuo Kirino',
-        'aliases': [
-            {
-                'name': u'アウト',
-                'sort_name': u'アウト',
-                'language_id': 1,
-                'default': True,
-                'primary': True
-            },
-            {
-                'name': u'Out',
-                'sort_name': u'Out',
-                'language_id': 1,
-                'default': True,
-                'primary': True
-            },
-            {
-                'name': u'Le quattro casalinghe di Tokyo',
-                'sort_name': u'Le quattro casalinghe di Tokyo',
-                'language_id': 1,
-                'default': True,
-                'primary': True
-            },
-            {
-                'name': u'De nachtploeg',
-                'sort_name': u'De nachtploeg',
-                'language_id': 1,
-                'default': True,
-                'primary': True
-            }
-        ]
-    })
+    ]
 
-    revision1.entity.master_revision = revision1
+    for revision_json in revision_jsons:
+        if 'publication_data' in revision_json:
+            entity_data = PublicationData.create(session, revision_json)
+            entity = Publication()
 
-    session.add(revision1)
+        revision = EntityRevision.create(user1.user_id, entity, entity_data)
+        revision.entity.master_revision = revision
+        session.add(revision)
+
     session.commit()
