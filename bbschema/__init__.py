@@ -27,7 +27,7 @@ from .entity_data import (EntityData, PublicationData, PublicationType,
 from .revision import (Revision, EntityRevision, RelationshipRevision,
                        RevisionNote)
 from .musicbrainz import (Gender, Language)
-from .relationships import (Relationship, RelationshipType, RelationshipTree,
+from .relationships import (Relationship, RelationshipType, RelationshipData,
                             RelationshipEntity, RelationshipText)
 
 from . import base

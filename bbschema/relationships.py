@@ -59,29 +59,60 @@ class RelationshipType(Base):
     deprecated = Column(Boolean, nullable=False, server_default=sql.false())
 
 
-class RelationshipTree(Base):
-    __tablename__ = 'rel_tree'
+class RelationshipData(Base):
+    __tablename__ = 'rel_data'
     __table_args__ = {'schema': 'bookbrainz'}
 
-    relationship_tree_id = Column(Integer, primary_key=True)
+    relationship_data_id = Column(Integer, primary_key=True)
 
     relationship_type_id = Column(
         Integer, ForeignKey('bookbrainz.rel_type.relationship_type_id'),
         nullable=False
     )
 
-    entities = relationship('RelationshipEntity', backref='relationship_tree')
-    texts = relationship('RelationshipText', backref='relationship_tree')
+    entities = relationship('RelationshipEntity', backref='relationship_data')
+    texts = relationship('RelationshipText', backref='relationship_data')
 
     relationship_type = relationship('RelationshipType')
+
+    @classmethod
+    def create(cls, data):
+        result = cls()
+
+        if 'relationship_type_id' not in data:
+            return None
+
+        result.relationship_type_id = data['relationship_type_id']
+
+        for entity in data.get('entities', []):
+            if ('entity_gid' not in entity) or ('position' not in entity):
+                return None
+
+            rel_entity = RelationshipEntity(entity_gid=entity['gid'],
+                                            position=entity['position'])
+            data.entities.append(rel_entity)
+
+        for text in data.get('text', []):
+            if ('text' not in text) or ('position' not in text):
+                return None
+
+            rel_text = RelationshipText(text=text['text'],
+                                        position=text['position'])
+            data.text.append(rel_text)
+
+        # A relationship must have at least 2 parts
+        if (len(data.entities) + len(data.text)) < 2:
+            return None
+
+        return result
 
 
 class RelationshipEntity(Base):
     __tablename__ = 'rel_entity'
     __table_args__ = {'schema': 'bookbrainz'}
 
-    relationship_tree_id = Column(
-        Integer, ForeignKey('bookbrainz.rel_tree.relationship_tree_id'),
+    relationship_data_id = Column(
+        Integer, ForeignKey('bookbrainz.rel_data.relationship_data_id'),
         primary_key=True
     )
     position = Column(SmallInteger, primary_key=True)
@@ -98,8 +129,8 @@ class RelationshipText(Base):
     __tablename__ = 'rel_text'
     __table_args__ = {'schema': 'bookbrainz'}
 
-    relationship_tree_id = Column(
-        Integer, ForeignKey('bookbrainz.rel_tree.relationship_tree_id'),
+    relationship_data_id = Column(
+        Integer, ForeignKey('bookbrainz.rel_data.relationship_data_id'),
         primary_key=True
     )
     position = Column(SmallInteger, primary_key=True)

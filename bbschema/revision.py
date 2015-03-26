@@ -158,15 +158,27 @@ class RelationshipRevision(Revision):
         Integer, ForeignKey('bookbrainz.rel.relationship_id'),
         nullable=False
     )
-    relationship_tree_id = Column(
-        Integer, ForeignKey('bookbrainz.rel_tree.relationship_tree_id'),
+    relationship_data_id = Column(
+        Integer, ForeignKey('bookbrainz.rel_data.relationship_data_id'),
         nullable=False
     )
 
     relationship = sqlalchemy.orm.relationship('Relationship',
                                                foreign_keys=[relationship_id])
-    relationship_tree = sqlalchemy.orm.relationship('RelationshipTree')
+    relationship_data = sqlalchemy.orm.relationship('RelationshipData')
 
     __mapper_args__ = {
         'polymorphic_identity': 2,
     }
+
+    @classmethod
+    def create(cls, user_id, relationship, relationship_data):
+        if entity is None or entity_data is None:
+            return None
+
+        revision = cls()
+        revision.user_id = user_id
+        revision.relationship = relationship
+        revision.relationship_data = relationship_data
+
+        return revision
