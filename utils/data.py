@@ -200,11 +200,15 @@ def create_test(hostname, port, username, password, db_name):
 
     for revision_json in revision_jsons:
         if 'publication_data' in revision_json:
-            entity_data = PublicationData.create(session, revision_json)
+            entity_data = PublicationData.create(revision_json, session)
             entity = Publication()
 
-        revision = EntityRevision.create(user1.user_id, entity, entity_data)
+        revision = EntityRevision(user_id=user1.user_id)
+        revision.entity = entity
+        revision.entity_data = entity_data
+
         revision.entity.master_revision = revision
+
         session.add(revision)
 
     session.commit()

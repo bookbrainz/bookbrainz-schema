@@ -38,9 +38,11 @@ class TestRelationshipViews(TestCase):
         }
 
         entity = Publication()
-        entity_data = PublicationData.create(self.session, revision_json)
+        entity_data = PublicationData.create(revision_json, self.session)
 
-        rev = EntityRevision.create(user.user_id, entity, entity_data)
+        rev = EntityRevision(user_id=user.user_id)
+        rev.entity = entity
+        rev.entity_data = entity_data
 
         self.session.add(rev)
         self.session.commit()
@@ -90,7 +92,8 @@ class TestRelationshipViews(TestCase):
 
         # Now, update it
         user = self.session.query(User).filter_by(user_id=1).one()
-        rev = EntityRevision.update(user, {
+
+        new_entity_data = entity.master_revision.entity_data.update({
             'entity_gid': [entity_gid],
             'annotation': u"Testing this entity, so do actually use this.",
             'disambiguation': u'A different disambiguation.',
@@ -104,6 +107,10 @@ class TestRelationshipViews(TestCase):
                 }]
             ]
         }, self.session)
+
+        rev = EntityRevision(user_id=user.user_id)
+        rev.entity = entity
+        rev.entity_data = new_entity_data
 
         self.session.add(rev)
         self.session.commit()
