@@ -65,14 +65,15 @@ class Revision(Base):
     parent_id = Column(Integer, ForeignKey('bookbrainz.revision.revision_id'))
 
     note = sqlalchemy.orm.column_property(
-               select([RevisionNote.content]).where(
-                   RevisionNote.revision_id == revision_id
-               ).order_by(RevisionNote.posted_at).limit(1)
-           )
+        select([RevisionNote.content]).where(
+            RevisionNote.revision_id == revision_id
+        ).order_by(RevisionNote.posted_at).limit(1)
+    )
 
     notes = relationship('RevisionNote')
     user = relationship('User', backref='revisions')
-    parent = relationship('Revision', backref='children', remote_side=[revision_id])
+    parent = relationship('Revision', backref='children',
+                          remote_side=[revision_id])
 
     _type = Column(SmallInteger, nullable=False)
 
@@ -107,42 +108,7 @@ class EntityRevision(Revision):
         'polymorphic_identity': 1,
     }
 
-    @classmethod
-    def create(cls, user_id, entity, entity_data):
-        if entity is None or entity_data is None:
-            return None
 
-        revision = cls()
-        revision.user_id = user_id
-        revision.entity = entity
-        revision.entity_data = entity_data
-
-        return revision
-
-    @classmethod
-    def update(cls, user, revision_json, session):
-        try:
-            entity = session.query(Entity).\
-                filter_by(entity_gid=revision_json['entity_gid'][0]).one()
-        except NoResultFound:
-            return None
-
-        if entity.master_revision_id is None:
-            return None
-
-        old_data = entity.master_revision.entity_data
-
-        new_data = old_data.update(revision_json)
-
-        if new_data == old_data:
-            return None
-
-        revision = cls()
-        revision.user = user
-        revision.entity = entity
-        revision.entity_data = new_data
-
-        return revision
 
 
 class RelationshipRevision(Revision):
@@ -173,7 +139,7 @@ class RelationshipRevision(Revision):
 
     @classmethod
     def create(cls, user_id, relationship, relationship_data):
-        if entity is None or entity_data is None:
+        if relationship is None or relationship_data is None:
             return None
 
         revision = cls()
