@@ -19,13 +19,12 @@
 base class for all resource models specified in this package."""
 
 import sqlalchemy.sql as sql
+from bbschema.base import Base
 from sqlalchemy import (Boolean, Column, DateTime, Enum, ForeignKey, Integer,
                         UnicodeText)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import text
-
-from .base import Base
 
 
 class Entity(Base):

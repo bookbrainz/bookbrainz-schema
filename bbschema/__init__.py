@@ -30,8 +30,8 @@ from .musicbrainz import (Gender, Language)
 from .relationships import (Relationship, RelationshipType, RelationshipData,
                             RelationshipEntity, RelationshipText)
 
-from . import base
+from .base import Base
 
 
 def create_all(engine):
-    base.Base.metadata.create_all(engine)
+    Base.metadata.create_all(engine)

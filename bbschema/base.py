@@ -19,4 +19,5 @@
 """This module defines the declarative base class used for other modules."""
 
 from sqlalchemy.ext.declarative import declarative_base
+
 Base = declarative_base()

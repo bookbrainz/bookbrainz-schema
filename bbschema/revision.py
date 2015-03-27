@@ -21,16 +21,12 @@ are changes to the database."""
 
 import sqlalchemy.orm
 import sqlalchemy.sql as sql
+from bbschema.base import Base
 from sqlalchemy import (Column, DateTime, ForeignKey, Integer, SmallInteger,
-                        Table, UnicodeText)
+                        UnicodeText)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
-from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.sql import select
-
-from .base import Base
-
-from .entity import Entity
 
 
 class RevisionNote(Base):

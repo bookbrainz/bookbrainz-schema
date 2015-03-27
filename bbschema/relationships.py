@@ -15,14 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import sqlalchemy.sql as sql
+from bbschema.base import Base
 from sqlalchemy import (Boolean, Column, DateTime, ForeignKey, Integer,
-                        UnicodeText, SmallInteger, Unicode)
+                        SmallInteger, Unicode, UnicodeText)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import text
-import sqlalchemy.sql as sql
-
-from .base import Base
 
 
 class Relationship(Base):
