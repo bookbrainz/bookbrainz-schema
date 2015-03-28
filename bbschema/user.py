@@ -61,9 +61,9 @@ class User(Base):
     country_id = Column(Integer)
 
     total_revisions = Column(Integer, nullable=False, server_default=text('0'))
-    revisions_accepted = Column(Integer, nullable=False,
-                                server_default=text('0'))
-    revisions_rejected = Column(Integer, nullable=False,
+    revisions_applied = Column(Integer, nullable=False,
+                               server_default=text('0'))
+    revisions_reverted = Column(Integer, nullable=False,
                                 server_default=text('0'))
 
     inactive = relationship('InactiveUser', uselist=False)

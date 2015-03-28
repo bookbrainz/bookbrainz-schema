@@ -21,16 +21,16 @@ def upgrade():
 
     op.drop_table('editor_stats', schema='bookbrainz')
 
-    op.add_column('user', sa.Column('revisions_accepted', sa.Integer(), server_default=sa.text(u'0'), nullable=False), schema='bookbrainz')
-    op.add_column('user', sa.Column('revisions_rejected', sa.Integer(), server_default=sa.text(u'0'), nullable=False), schema='bookbrainz')
+    op.add_column('user', sa.Column('revisions_applied', sa.Integer(), server_default=sa.text(u'0'), nullable=False), schema='bookbrainz')
+    op.add_column('user', sa.Column('revisions_reverted', sa.Integer(), server_default=sa.text(u'0'), nullable=False), schema='bookbrainz')
     op.add_column('user', sa.Column('total_revisions', sa.Integer(), server_default=sa.text(u'0'), nullable=False), schema='bookbrainz')
     ### end Alembic commands ###
 
 
 def downgrade():
     op.drop_column('user', 'total_revisions', schema='bookbrainz')
-    op.drop_column('user', 'revisions_rejected', schema='bookbrainz')
-    op.drop_column('user', 'revisions_accepted', schema='bookbrainz')
+    op.drop_column('user', 'revisions_reverted', schema='bookbrainz')
+    op.drop_column('user', 'revisions_applied', schema='bookbrainz')
 
     op.create_table('editor_stats',
     sa.Column('user_id', sa.INTEGER(), autoincrement=False, nullable=False),
