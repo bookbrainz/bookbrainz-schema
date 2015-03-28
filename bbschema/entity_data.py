@@ -466,7 +466,7 @@ class EditionData(EntityData):
         new_data.ended = data.get('ended', False)
         new_data.country_id = data.get('country_id')
         new_data.language_id =\
-            data.get('language', {}).data.get('language_id')
+            data.get('language', {}).get('language_id')
         new_data.edition_status_id =\
             data.get('edition_status', {}).get('edition_status_id')
 
