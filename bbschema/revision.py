@@ -41,8 +41,7 @@ class RevisionNote(Base):
         Integer, ForeignKey('bookbrainz.revision.revision_id'), nullable=False
     )
     content = Column(UnicodeText, nullable=False)
-    posted_at = Column(DateTime(timezone=True), nullable=False,
-                       server_default=sql.func.now())
+    posted_at = Column(DateTime, nullable=False, server_default=sql.func.now())
 
     user = relationship('User')
 
@@ -55,7 +54,7 @@ class Revision(Base):
 
     user_id = Column(Integer, ForeignKey('bookbrainz.user.user_id'),
                      nullable=False)
-    created_at = Column(DateTime(timezone=True), nullable=False,
+    created_at = Column(DateTime, nullable=False,
                         server_default=sql.func.now())
 
     parent_id = Column(Integer, ForeignKey('bookbrainz.revision.revision_id'))

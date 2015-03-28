@@ -45,9 +45,9 @@ class User(Base):
     reputation = Column(Integer, nullable=False, server_default=text('0'))
     bio = Column(UnicodeText)
     birth_date = Column(Date)
-    created_at = Column(DateTime(timezone=True), nullable=False,
+    created_at = Column(DateTime, nullable=False,
                         server_default=sql.func.now())
-    active_at = Column(DateTime(timezone=True), nullable=False,
+    active_at = Column(DateTime, nullable=False,
                        server_default=sql.func.now())
 
     user_type_id = Column(
