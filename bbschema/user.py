@@ -18,7 +18,7 @@
 import sqlalchemy.sql as sql
 from bbschema.base import Base
 from sqlalchemy import (Boolean, Column, Date, DateTime, Enum, ForeignKey,
-                        Integer, Unicode, UnicodeText)
+                        Integer, Text, Unicode, UnicodeText)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import text
@@ -40,6 +40,7 @@ class User(Base):
     user_id = Column(Integer, primary_key=True)
 
     name = Column(Unicode(64), nullable=False, unique=True)
+    password = Column(Text, nullable=False)
     email = Column(Unicode(255), nullable=False)
     reputation = Column(Integer, nullable=False, server_default=text('0'))
     bio = Column(UnicodeText)
