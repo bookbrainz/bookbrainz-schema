@@ -23,6 +23,19 @@ def create_fixed(hostname, port, username, password, db_name):
     ]
     session.add_all(user_types)
 
+    # Create Bookworm user as a bot
+    bot_type = session.query(UserType).filter_by(label=u'Bot').one()
+
+    user = User(name="Bookworm", email="admin@bookbrainz.org",
+                         password="", user_type_id=bot_type.user_type_id)
+    session.add(user)
+
+    # Create OAuth client for the frontend
+    bookworm_user = session.query(User).filter_by(name=u'Bookworm').one()
+
+    client = OAuthClient(owner_id=bookworm_user.user_id)
+    session.add(client)
+
     # Add Publication Types
     publication_types = [
         PublicationType(label='Book'),
