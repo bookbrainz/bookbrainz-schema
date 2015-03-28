@@ -155,9 +155,9 @@ def create_test(hostname, port, username, password, db_name):
 
     # Create a couple of users
     user1 = User(name="user1", email="user1@users.org",
-                 user_type_id=editor_type.user_type_id)
+                 password="", user_type_id=editor_type.user_type_id)
     user2 = User(name="user2", email="user1@users.org",
-                 user_type_id=editor_type.user_type_id)
+                 password="", user_type_id=editor_type.user_type_id)
     session.add_all([user1, user2])
 
     book_type = session.query(PublicationType).filter_by(label=u'Book').one()
