@@ -18,8 +18,8 @@
 from .entity import (Entity, EntityRedirect,
                      Annotation, Disambiguation, Alias, Creator, Publication,
                      Edition, Publisher, Work)
-from .user import (User, UserType, InactiveUser, SuspendedUser, EditorStats,
-                   OAuthClient, Message, MessageReceipt, EditorLanguage)
+from .user import (User, UserType, InactiveUser, SuspendedUser, OAuthClient,
+                   Message, MessageReceipt, UserLanguage)
 from .entity_data import (EntityData, PublicationData, PublicationType,
                           CreatorData, CreatorType, PublisherData,
                           PublisherType, EditionData, EditionStatus, WorkData,

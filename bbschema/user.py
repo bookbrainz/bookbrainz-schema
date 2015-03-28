@@ -43,8 +43,10 @@ class User(Base):
     password = Column(Text, nullable=False)
     email = Column(Unicode(255), nullable=False)
     reputation = Column(Integer, nullable=False, server_default=text('0'))
+
     bio = Column(UnicodeText)
     birth_date = Column(Date)
+
     created_at = Column(DateTime, nullable=False,
                         server_default=sql.func.now())
     active_at = Column(DateTime, nullable=False,
@@ -54,13 +56,19 @@ class User(Base):
         Integer, ForeignKey('bookbrainz.user_type.user_type_id'),
         nullable=False
     )
+
     gender_id = Column(Integer)
     country_id = Column(Integer)
 
+    total_revisions = Column(Integer, nullable=False, server_default=text('0'))
+    revisions_accepted = Column(Integer, nullable=False,
+                                server_default=text('0'))
+    revisions_rejected = Column(Integer, nullable=False,
+                                server_default=text('0'))
+
     inactive = relationship('InactiveUser', uselist=False)
     suspended = relationship('SuspendedUser', uselist=False)
-    editor_stats = relationship('EditorStats', uselist=False, backref='user')
-    languages = relationship('EditorLanguage', backref='editor')
+    languages = relationship('UserLanguage', backref='user')
     user_type = relationship('UserType')
 
 
@@ -82,23 +90,8 @@ class SuspendedUser(Base):
     reason = Column(UnicodeText, nullable=False)
 
 
-class EditorStats(Base):
-
-    __tablename__ = 'editor_stats'
-    __table_args__ = {'schema': 'bookbrainz'}
-
-    user_id = Column(Integer, ForeignKey('bookbrainz.user.user_id'),
-                     primary_key=True)
-
-    total_edits = Column(Integer, nullable=False, server_default=text('0'))
-    total_revisions = Column(Integer, nullable=False, server_default=text('0'))
-    edits_accepted = Column(Integer, nullable=False, server_default=text('0'))
-    edits_rejected = Column(Integer, nullable=False, server_default=text('0'))
-    edits_failed = Column(Integer, nullable=False, server_default=text('0'))
-
-
-class EditorLanguage(Base):
-    __tablename__ = 'editor_language'
+class UserLanguage(Base):
+    __tablename__ = 'user_language'
     __table_args__ = {'schema': 'bookbrainz'}
 
     user_id = Column(Integer, ForeignKey('bookbrainz.user.user_id'),
