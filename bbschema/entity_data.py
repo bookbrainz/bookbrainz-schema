@@ -163,8 +163,10 @@ class PublicationData(EntityData):
     def update(self, data, session):
         new_data = super(PublicationData, self).update(data, session)
 
-        if 'publication_type_id' in data:
-            new_data.publication_type_id = data['publication_type_id']
+        if (('publication_type' in data) and
+                ('publication_type' in data['publication_type_id'])):
+            new_data.creator_type_id =\
+                data['creator_type']['publication_type_id']
 
         if new_data == self:
             return self
@@ -266,8 +268,9 @@ class CreatorData(EntityData):
             new_data.country_id = data['country_id']
         if 'gender_id' in data:
             new_data.gender_id = data['gender_id']
-        if 'creator_type_id' in data:
-            new_data.creator_type_id = data['creator_type_id']
+        if (('creator_type' in data) and
+                ('creator_type_id' in data['creator_type'])):
+            new_data.creator_type_id = data['creator_type']['creator_type_id']
 
         if new_data == self:
             return self
@@ -370,8 +373,10 @@ class PublisherData(EntityData):
             new_data.ended = data['ended']
         if 'country_id' in data:
             new_data.country_id = data['country_id']
-        if 'publisher_type_id' in data:
-            new_data.publisher_type_id = data['publisher_type_id']
+        if (('publisher_type' in data) and
+                ('publisher_type' in data['publisher_type_id'])):
+            new_data.publisher_type_id =\
+                data['publisher_type']['publisher_type_id']
 
         if new_data == self:
             return self
@@ -460,7 +465,8 @@ class EditionData(EntityData):
         new_data.end_date_precision = data.get('end_date_precision')
         new_data.ended = data.get('ended', False)
         new_data.country_id = data.get('country_id')
-        new_data.language_id = data.get('language_id')
+        new_data.language_id =\
+            data.get('language', {}).data.get('language_id')
         new_data.edition_status_id =\
             data.get('edition_status', {}).get('edition_status_id')
 
@@ -481,10 +487,13 @@ class EditionData(EntityData):
             new_data.ended = data['ended']
         if 'country_id' in data:
             new_data.country_id = data['country_id']
-        if 'edition_status_id' in data:
-            new_data.edition_status_id = data['edition_status_id']
-        if 'language_id' in data:
-            new_data.language_id = data['language_id']
+        if (('edition_status' in data) and
+                ('edition_status' in data['edition_status_id'])):
+            new_data.edition_status_id =\
+                data['edition_status']['edition_status_id']
+        if (('language' in data) and
+                ('language' in data['language_id'])):
+            new_data.language_id = data['language']['language_id']
 
         if new_data == self:
             return self
@@ -577,10 +586,12 @@ class WorkData(EntityData):
             new_data.ended = data['ended']
         if 'country_id' in data:
             new_data.country_id = data['country_id']
-        if 'edition_status_id' in data:
-            new_data.edition_status_id = data['edition_status_id']
-        if 'language_id' in data:
-            new_data.language_id = data['language_id']
+        if (('work_type' in data) and
+                ('work_type' in data['work_type_id'])):
+            new_data.language_id = data['work_type']['work_type_id']
+        if (('language' in data) and
+                ('language' in data['language_id'])):
+            new_data.language_id = data['language']['language_id']
 
         if new_data == self:
             return self
