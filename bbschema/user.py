@@ -57,7 +57,7 @@ class User(Base):
         nullable=False
     )
 
-    gender_id = Column(Integer)
+    gender_id = Column(Integer, ForeignKey('musicbrainz.gender.id'))
     country_id = Column(Integer)
 
     total_revisions = Column(Integer, nullable=False, server_default=text('0'))
@@ -70,6 +70,7 @@ class User(Base):
     suspended = relationship('SuspendedUser', uselist=False)
     languages = relationship('UserLanguage', backref='user')
     user_type = relationship('UserType')
+    gender = relationship('Gender')
 
 
 class InactiveUser(Base):
