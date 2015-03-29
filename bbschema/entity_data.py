@@ -72,7 +72,8 @@ class EntityData(Base):
 
     annotation = relationship('Annotation')
     disambiguation = relationship('Disambiguation')
-    aliases = relationship("Alias", secondary=ENTITY_DATA__ALIAS)
+    aliases = relationship("Alias", secondary=ENTITY_DATA__ALIAS,
+                           backref='data')
     default_alias = relationship('Alias', foreign_keys=[default_alias_id])
 
     def __eq__(self, other):

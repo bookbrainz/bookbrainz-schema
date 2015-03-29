@@ -97,7 +97,7 @@ class EntityRevision(Revision):
     )
 
     entity = relationship('Entity', foreign_keys=[entity_gid])
-    entity_data = relationship('EntityData')
+    entity_data = relationship('EntityData', backref='revisions')
 
     __mapper_args__ = {
         'polymorphic_identity': 1,
