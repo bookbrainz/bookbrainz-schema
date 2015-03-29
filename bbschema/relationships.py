@@ -78,18 +78,20 @@ class RelationshipData(Base):
     def create(cls, data):
         result = cls()
 
-        if 'relationship_type_id' not in data:
+        if (('relationship_type' not in data) or
+                ('relationship_type_id' not in data['relationship_type'])):
             return None
 
-        result.relationship_type_id = data['relationship_type_id']
+        result.relationship_type_id = \
+            data['relationship_type']['relationship_type_id']
 
         for entity in data.get('entities', []):
             if ('entity_gid' not in entity) or ('position' not in entity):
                 return None
 
-            rel_entity = RelationshipEntity(entity_gid=entity['gid'],
+            rel_entity = RelationshipEntity(entity_gid=entity['entity_gid'],
                                             position=entity['position'])
-            data.entities.append(rel_entity)
+            result.entities.append(rel_entity)
 
         for text in data.get('text', []):
             if ('text' not in text) or ('position' not in text):
@@ -97,10 +99,10 @@ class RelationshipData(Base):
 
             rel_text = RelationshipText(text=text['text'],
                                         position=text['position'])
-            data.text.append(rel_text)
+            result.texts.append(rel_text)
 
         # A relationship must have at least 2 parts
-        if (len(data.entities) + len(data.text)) < 2:
+        if (len(result.entities) + len(result.texts)) < 2:
             return None
 
         return result
