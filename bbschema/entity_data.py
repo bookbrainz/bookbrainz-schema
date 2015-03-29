@@ -552,7 +552,7 @@ class WorkData(EntityData):
 
     @classmethod
     def create(cls, data, session):
-        new_data = super(EditionData, cls).create(session, data)
+        new_data = super(WorkData, cls).create(data, session)
 
         new_data.begin_date = data.get('begin_date')
         new_data.begin_date_precision = data.get('begin_date_precision')
@@ -564,7 +564,8 @@ class WorkData(EntityData):
         new_data.work_type_id =\
             data.get('work_type', {}).get('work_type_id')
 
-        for language_id in data.get('languages', []):
+        for language_data in data.get('languages', []):
+            language_id = language_data['language_id']
             language = session.query(Language).get(language_id)
             if language is not None:
                 new_data.languages.append(language)
