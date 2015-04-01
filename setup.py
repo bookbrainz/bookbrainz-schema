@@ -22,8 +22,8 @@ class test_cmd(Command):
 class bootstrap(Command):
     description = "initialize database and fixed data"
     user_options = [
-        ('notables=', 'b', "don't create tables"),
-        ('blank=', 'b', "don't add test data")
+        ('notables', 'n', "don't create tables"),
+        ('blank', 'b', "don't add test data")
     ]
 
     def initialize_options(self):
