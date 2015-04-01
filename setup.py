@@ -22,11 +22,13 @@ class test_cmd(Command):
 class bootstrap(Command):
     description = "initialize database and fixed data"
     user_options = [
+        ('notables=', 'b', "don't create tables"),
         ('blank=', 'b', "don't add test data")
     ]
 
     def initialize_options(self):
         self.blank = False
+        self.notables = False
 
     def finalize_options(self):
         pass
@@ -36,8 +38,11 @@ class bootstrap(Command):
         import utils.data
         from bbschema import config
 
-        utils.create.create_all(config.HOSTNAME, config.PORT, config.USERNAME,
-                                config.PASSWORD, config.DATABASE)
+        if not self.notables:
+            utils.create.create_all(
+                config.HOSTNAME, config.PORT, config.USERNAME, config.PASSWORD,
+                config.DATABASE
+            )
 
         utils.data.create_fixed(config.HOSTNAME, config.PORT, config.USERNAME,
                                 config.PASSWORD, config.DATABASE)
