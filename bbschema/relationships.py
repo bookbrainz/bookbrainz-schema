@@ -31,7 +31,7 @@ class Relationship(Base):
     relationship_id = Column(Integer, primary_key=True)
 
     last_updated = Column(DateTime, nullable=False,
-                          server_default=sql.func.now())
+                          server_default=text("now() AT TIME ZONE 'UTC'"))
     master_revision_id = Column(Integer,
                                 ForeignKey('bookbrainz.revision.revision_id'))
 

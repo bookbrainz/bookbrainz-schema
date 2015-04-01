@@ -26,7 +26,7 @@ from sqlalchemy import (Column, DateTime, ForeignKey, Integer, SmallInteger,
                         UnicodeText)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql import select
+from sqlalchemy.sql import select, text
 
 
 class RevisionNote(Base):
@@ -41,7 +41,8 @@ class RevisionNote(Base):
         Integer, ForeignKey('bookbrainz.revision.revision_id'), nullable=False
     )
     content = Column(UnicodeText, nullable=False)
-    posted_at = Column(DateTime, nullable=False, server_default=sql.func.now())
+    posted_at = Column(DateTime, nullable=False,
+                       server_default=text("now() AT TIME ZONE 'UTC'"))
 
     user = relationship('User')
 
@@ -55,7 +56,7 @@ class Revision(Base):
     user_id = Column(Integer, ForeignKey('bookbrainz.user.user_id'),
                      nullable=False)
     created_at = Column(DateTime, nullable=False,
-                        server_default=sql.func.now())
+                        server_default=text("now() AT TIME ZONE 'UTC'"))
 
     parent_id = Column(Integer, ForeignKey('bookbrainz.revision.revision_id'))
 
