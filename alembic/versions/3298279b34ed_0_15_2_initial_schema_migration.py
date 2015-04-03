@@ -55,7 +55,7 @@ def upgrade():
     )
     op.create_table('entity',
     sa.Column('gid', postgresql.UUID(as_uuid=True), server_default=sa.text(u'public.uuid_generate_v4()'), nullable=False),
-    sa.Column('last_updated', sa.DateTime(), server_default=sa.text(u"now() AT TIME ZONE 'UTC'"), nullable=False),
+    sa.Column('last_updated', sa.DateTime(), server_default=sa.text(u"(now() AT TIME ZONE 'UTC')"), nullable=False),
     sa.Column('master_revision_id', sa.Integer(), nullable=True),
     sa.PrimaryKeyConstraint('gid'),
     schema='bookbrainz'
@@ -83,7 +83,7 @@ def upgrade():
     op.create_table('annotation',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('content', sa.UnicodeText(), server_default='', nullable=False),
-    sa.Column('created_at', sa.DateTime(), server_default=sa.text(u"now() AT TIME ZONE 'UTC'"), nullable=False),
+    sa.Column('created_at', sa.DateTime(), server_default=sa.text(u"(now() AT TIME ZONE 'UTC')"), nullable=False),
     sa.PrimaryKeyConstraint('id'),
     schema='bookbrainz'
     )
@@ -176,8 +176,8 @@ def upgrade():
     sa.Column('reputation', sa.Integer(), server_default=sa.text(u'0'), nullable=False),
     sa.Column('bio', sa.UnicodeText(), nullable=True),
     sa.Column('birth_date', sa.Date(), nullable=True),
-    sa.Column('created_at', sa.DateTime, server_default=sa.text(u"now() AT TIME ZONE 'UTC'"), nullable=False),
-    sa.Column('active_at', sa.DateTime, server_default=sa.text(u"now() AT TIME ZONE 'UTC'"), nullable=False),
+    sa.Column('created_at', sa.DateTime, server_default=sa.text(u"(now() AT TIME ZONE 'UTC')"), nullable=False),
+    sa.Column('active_at', sa.DateTime, server_default=sa.text(u"(now() AT TIME ZONE 'UTC')"), nullable=False),
     sa.Column('user_type_id', sa.Integer(), nullable=False),
     sa.Column('gender_id', sa.Integer(), nullable=True),
     sa.Column('country_id', sa.Integer(), nullable=True),
@@ -241,7 +241,7 @@ def upgrade():
     op.create_table('revision',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
-    sa.Column('created_at', sa.DateTime, server_default=sa.text(u"now() AT TIME ZONE 'UTC'"), nullable=False),
+    sa.Column('created_at', sa.DateTime, server_default=sa.text(u"(now() AT TIME ZONE 'UTC')"), nullable=False),
     sa.Column('_type', sa.SmallInteger(), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['bookbrainz.user.id'], ),
     sa.PrimaryKeyConstraint('id'),
@@ -373,7 +373,7 @@ def upgrade():
     )
     op.create_table('rel',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('last_updated', sa.DateTime(), server_default=sa.text(u"now() AT TIME ZONE 'UTC'"), nullable=False),
+    sa.Column('last_updated', sa.DateTime(), server_default=sa.text(u"(now() AT TIME ZONE 'UTC')"), nullable=False),
     sa.Column('master_revision_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['master_revision_id'], ['bookbrainz.revision.id'], ),
     sa.PrimaryKeyConstraint('id'),
@@ -384,7 +384,7 @@ def upgrade():
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('edit_id', sa.Integer(), nullable=False),
     sa.Column('content', sa.UnicodeText(), nullable=False),
-    sa.Column('posted_at', sa.DateTime, server_default=sa.text(u"now() AT TIME ZONE 'UTC'"), nullable=False),
+    sa.Column('posted_at', sa.DateTime, server_default=sa.text(u"(now() AT TIME ZONE 'UTC')"), nullable=False),
     sa.ForeignKeyConstraint(['edit_id'], ['bookbrainz.edit.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['bookbrainz.user.id'], ),
     sa.PrimaryKeyConstraint('id'),

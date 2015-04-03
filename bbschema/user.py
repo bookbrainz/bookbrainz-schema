@@ -48,9 +48,9 @@ class User(Base):
     birth_date = Column(Date)
 
     created_at = Column(DateTime, nullable=False,
-                        server_default=text("now() AT TIME ZONE 'UTC'"))
+                        server_default=text("(now() AT TIME ZONE 'UTC')"))
     active_at = Column(DateTime, nullable=False,
-                       server_default=text("now() AT TIME ZONE 'UTC'"))
+                       server_default=text("(now() AT TIME ZONE 'UTC')"))
 
     user_type_id = Column(
         Integer, ForeignKey('bookbrainz.user_type.user_type_id'),

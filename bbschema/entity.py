@@ -37,7 +37,7 @@ class Entity(Base):
                         server_default=text('public.uuid_generate_v4()'))
 
     last_updated = Column(DateTime, nullable=False,
-                          server_default=text("now() AT TIME ZONE 'UTC'"))
+                          server_default=text("(now() AT TIME ZONE 'UTC')"))
     master_revision_id = Column(
         Integer, ForeignKey('bookbrainz.entity_revision.revision_id',
                             use_alter=True, name='fk_master_revision_id')
@@ -108,7 +108,7 @@ class Annotation(Base):
 
     content = Column(UnicodeText, nullable=False)
     created_at = Column(DateTime, nullable=False,
-                        server_default=text("now() AT TIME ZONE 'UTC'"))
+                        server_default=text("(now() AT TIME ZONE 'UTC')"))
 
     def copy(self):
         return Annotation(content=self.content, created_at=self.created_at)

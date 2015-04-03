@@ -42,7 +42,7 @@ class RevisionNote(Base):
     )
     content = Column(UnicodeText, nullable=False)
     posted_at = Column(DateTime, nullable=False,
-                       server_default=text("now() AT TIME ZONE 'UTC'"))
+                       server_default=text("(now() AT TIME ZONE 'UTC')"))
 
     user = relationship('User')
 
@@ -56,7 +56,7 @@ class Revision(Base):
     user_id = Column(Integer, ForeignKey('bookbrainz.user.user_id'),
                      nullable=False)
     created_at = Column(DateTime, nullable=False,
-                        server_default=text("now() AT TIME ZONE 'UTC'"))
+                        server_default=text("(now() AT TIME ZONE 'UTC')"))
 
     parent_id = Column(Integer, ForeignKey('bookbrainz.revision.revision_id'))
 
