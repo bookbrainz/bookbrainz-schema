@@ -19,11 +19,12 @@
 base class for all resource models specified in this package."""
 
 from bbschema.base import Base
-from bbschema.entity import (Annotation, Disambiguation, create_aliases,
-                             update_aliases)
+from bbschema.entity import (Annotation, Disambiguation, Creator, Publication,
+                             Publisher, create_aliases, update_aliases)
 from bbschema.musicbrainz import Language
 from sqlalchemy import (Boolean, Column, Date, Enum, ForeignKey, Integer,
-                        Table, UnicodeText)
+                        SmallInteger, Table, Unicode, UnicodeText)
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
 ENTITY_DATA__ALIAS = Table(
@@ -49,6 +50,64 @@ WORK_DATA__LANGUAGE = Table(
     ),
     schema='bookbrainz'
 )
+
+
+class CreatorCredit(Base):
+    __tablename__ = 'creator_credit'
+    __table_args__ = {'schema': 'bookbrainz'}
+
+    creator_credit_id = Column(Integer, primary_key=True)
+    begin_phrase = Column(UnicodeText, nullable=False, server_default='')
+
+    names = relationship('CreatorCreditName', backref='creator_credit')
+
+    @classmethod
+    def create(cls, data, session):
+        new_credit = cls()
+
+        new_credit.begin_phrase = data.get('begin_phrase', '')
+
+        for name_data in data.get('names', []):
+            name = CreatorCreditName.create(name_data, session)
+
+            name.creator_credit_id = new_credit.creator_credit_id
+            new_credit.names.append(name)
+
+        return new_credit
+
+
+class CreatorCreditName(Base):
+    __tablename__ = 'creator_credit_name'
+    __table_args__ = {'schema': 'bookbrainz'}
+
+    creator_credit_id = Column(
+        Integer, ForeignKey('bookbrainz.creator_credit.creator_credit_id'),
+        primary_key=True
+    )
+
+    position = Column(SmallInteger, primary_key=True, autoincrement=False)
+
+    creator_gid = Column(
+        UUID(as_uuid=True), ForeignKey('bookbrainz.entity.entity_gid')
+    )
+
+    name = Column(Unicode, nullable=False)
+    join_phrase = Column(UnicodeText, nullable=False)
+
+    creator = relationship('Creator')
+
+    @classmethod
+    def create(cls, data, session):
+        new_name = cls()
+
+        new_name.position = data.get('position')
+        new_name.name = data.get('name')
+        new_name.join_phrase = data.get('join_phrase')
+
+        creator = session.query(Creator).get(data.get('creator_gid'))
+        new_name.creator = creator
+
+        return new_name
 
 
 class EntityData(Base):
@@ -415,7 +474,13 @@ class EditionData(EntityData):
         primary_key=True
     )
 
-    # TODO: Implement creator credits, and add a FK here.
+    publication_gid = Column(
+        UUID(as_uuid=True), ForeignKey(Publication.entity_gid), nullable=False
+    )
+
+    creator_credit_id = Column(
+        Integer, ForeignKey('bookbrainz.creator_credit.creator_credit_id')
+    )
 
     begin_date = Column(Date)
     begin_date_precision = Column(
@@ -435,8 +500,15 @@ class EditionData(EntityData):
         Integer, ForeignKey('bookbrainz.edition_status.edition_status_id')
     )
 
+    publisher_gid = Column(
+        UUID(as_uuid=True), ForeignKey(Publisher.entity_gid)
+    )
+
+    publication = relationship('Publication')
+    creator_credit = relationship('CreatorCredit')
     language = relationship('Language')
     edition_status = relationship('EditionStatus')
+    publisher = relationship('Publisher')
 
     __mapper_args__ = {
         'polymorphic_identity': 4,
@@ -460,6 +532,13 @@ class EditionData(EntityData):
     def create(cls, data, session):
         new_data = super(EditionData, cls).create(data, session)
 
+        publication =\
+            session.query(Publication).get(data.get('publication_gid'))
+        new_data.publication = publication
+
+        new_data.creator_credit =\
+            CreatorCredit.create(data.get('creator_credit'), session)
+
         new_data.begin_date = data.get('begin_date')
         new_data.begin_date_precision = data.get('begin_date_precision')
         new_data.end_date = data.get('end_date')
@@ -470,6 +549,10 @@ class EditionData(EntityData):
             data.get('language', {}).get('language_id')
         new_data.edition_status_id =\
             data.get('edition_status', {}).get('edition_status_id')
+
+        publisher =\
+            session.query(Publisher).get(data.get('publisher_gid'))
+        new_data.publisher = publisher
 
         return new_data
 
