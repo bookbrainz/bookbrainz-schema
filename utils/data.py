@@ -80,6 +80,20 @@ def create_fixed(hostname, port, username, password, db_name):
     ]
     session.add_all(work_types)
 
+    identifier_types = [
+        IdentifierType(
+            label='ISBN-13',
+            description='13-digit International Standard Book Number',
+            entity_type = 'Edition'
+        ),
+        IdentifierType(
+            label='Barcode',
+            description='EAN, UPC or other printed barcode',
+            entity_type = 'Edition'
+        )
+    ]
+    session.add_all(identifier_types)
+
     base_relationship_types = [
         RelationshipType(
             label='Worked on',

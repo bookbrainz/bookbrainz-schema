@@ -23,9 +23,11 @@ from bbschema.entity import (Annotation, Disambiguation, Creator, Publication,
                              Publisher, create_aliases, update_aliases)
 from bbschema.musicbrainz import Language
 from sqlalchemy import (Boolean, Column, Date, Enum, ForeignKey, Integer,
-                        SmallInteger, Table, Unicode, UnicodeText)
+                        SmallInteger, Table, Unicode, UnicodeText,
+                        UniqueConstraint)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql import text
 
 ENTITY_DATA__ALIAS = Table(
     'entity_data__alias', Base.metadata,
@@ -35,6 +37,21 @@ ENTITY_DATA__ALIAS = Table(
     ),
     Column('alias_id', Integer, ForeignKey('bookbrainz.alias.alias_id'),
            primary_key=True),
+    schema='bookbrainz'
+)
+
+ENTITY_DATA__IDENTIFIER = Table(
+    'entity_data__identifier', Base.metadata,
+    Column(
+        'entity_data_id', Integer,
+        ForeignKey('bookbrainz.entity_data.entity_data_id'), primary_key=True,
+        nullable=False
+    ),
+    Column(
+        'identifier_id', Integer,
+        ForeignKey('bookbrainz.identifier.identifier_id'), primary_key=True,
+        nullable=False
+    ),
     schema='bookbrainz'
 )
 
@@ -50,6 +67,59 @@ WORK_DATA__LANGUAGE = Table(
     ),
     schema='bookbrainz'
 )
+
+
+class Identifier(Base):
+    __tablename__ = 'identifier'
+    __table_args__ = {'schema': 'bookbrainz'}
+
+    identifier_id = Column(Integer, primary_key=True)
+    identifier_type_id = Column(
+        Integer, ForeignKey('bookbrainz.identifier_type.identifier_type_id'),
+        nullable=False
+    )
+
+    value = Column(UnicodeText, nullable=False)
+
+    identifier_type = relationship('IdentifierType')
+
+    @classmethod
+    def create(cls, data, session):
+        new_identifier = cls()
+
+        new_identifier.identifier_type_id =\
+            data.get('identifier_type', {}).get('identifier_type_id')
+
+        new_identifier.value = data.get('value')
+
+        return new_identifier
+
+
+class IdentifierType(Base):
+    __tablename__ = 'identifier_type'
+    __table_args__ = {'schema': 'bookbrainz'}
+
+    identifier_type_id = Column(Integer, primary_key=True)
+    label = Column(Unicode(255), nullable=False)
+
+    entity_type = Column(
+        Enum(
+            'Creator', 'Publication', 'Edition', 'Publisher', 'Work',
+            name='entity_types'
+        ),
+        nullable=False
+    )
+
+    parent_id = Column(
+        Integer, ForeignKey('bookbrainz.identifier_type.identifier_type_id')
+    )
+
+    child_order = Column(Integer, nullable=False, server_default=text('0'))
+    description = Column(UnicodeText, nullable=False)
+
+    parent = relationship('IdentifierType')
+
+    UniqueConstraint('label', 'entity_type')
 
 
 class CreatorCredit(Base):
@@ -135,6 +205,9 @@ class EntityData(Base):
                            backref='data')
     default_alias = relationship('Alias', foreign_keys=[default_alias_id])
 
+    identifiers = relationship('Identifier', secondary=ENTITY_DATA__IDENTIFIER,
+                               backref='data')
+
     def __eq__(self, other):
         # Assume that other is an EntityData
         for left, right in zip(self.aliases, other.aliases):
@@ -157,6 +230,10 @@ class EntityData(Base):
 
         if default_alias is not None:
             new_data.default_alias = default_alias
+
+        for identifier_data in data.get('identifiers', []):
+            identifier = Identifier.create(identifier_data, session)
+            new_data.identifiers.append(identifier)
 
         return new_data
 
