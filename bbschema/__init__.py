@@ -23,7 +23,8 @@ from .user import (User, UserType, InactiveUser, SuspendedUser, OAuthClient,
 from .entity_data import (EntityData, PublicationData, PublicationType,
                           CreatorData, CreatorType, PublisherData,
                           PublisherType, EditionData, EditionStatus, WorkData,
-                          WorkType)
+                          WorkType, CreatorCredit, CreatorCreditName,
+                          Identifier, IdentifierType)
 from .revision import (Revision, EntityRevision, RelationshipRevision,
                        RevisionNote)
 from .musicbrainz import (Gender, Language)
