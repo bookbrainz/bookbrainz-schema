@@ -504,11 +504,11 @@ class EditionData(EntityData):
         UUID(as_uuid=True), ForeignKey(Publisher.entity_gid)
     )
 
-    publication = relationship('Publication')
+    publication = relationship('Publication', foreign_keys=[publication_gid])
     creator_credit = relationship('CreatorCredit')
     language = relationship('Language')
     edition_status = relationship('EditionStatus')
-    publisher = relationship('Publisher')
+    publisher = relationship('Publisher', foreign_keys=[publisher_gid])
 
     __mapper_args__ = {
         'polymorphic_identity': 4,
@@ -532,6 +532,10 @@ class EditionData(EntityData):
     def create(cls, data, session):
         new_data = super(EditionData, cls).create(data, session)
 
+        publication_gid = data.get('publication_gid')
+        if publication_gid is None:
+            abort(400)
+
         publication =\
             session.query(Publication).get(data.get('publication_gid'))
         new_data.publication = publication
@@ -550,9 +554,12 @@ class EditionData(EntityData):
         new_data.edition_status_id =\
             data.get('edition_status', {}).get('edition_status_id')
 
-        publisher =\
-            session.query(Publisher).get(data.get('publisher_gid'))
-        new_data.publisher = publisher
+        publisher_gid = data.get('publisher_gid')
+        if publisher_gid is not None:
+            publisher =\
+                session.query(Publisher).get()
+
+            new_data.publisher = publisher
 
         return new_data
 
