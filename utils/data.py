@@ -177,8 +177,9 @@ def create_test(hostname, port, username, password, db_name):
     book_type = session.query(PublicationType).filter_by(label=u'Book').one()
 
     languages = [
-        Language(name="Klingon"),
-        Language(name="Romulan")
+        Language(name="Klingon", frequency=1),
+        Language(name="Romulan", frequency=2),
+        Language(name="Ferengi", frequency=0)
     ]
     session.add_all(languages)
 
