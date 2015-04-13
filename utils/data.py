@@ -98,37 +98,37 @@ def create_fixed(hostname, port, username, password, db_name):
         RelationshipType(
             label='Worked on',
             description='Indicates that a creator worked on a work',
-            template='{{{entities.0}}} worked on {{{entities.1}}}',
+            template='{{{entities.[0]}}} worked on {{{entities.[1]}}}',
         ),
         RelationshipType(
             label='Illustrated',
             description='Indicates that a creator illustrated an edition',
-            template='{{{entities.0}}} illustrated {{{entities.1}}}',
+            template='{{{entities.[0]}}} illustrated {{{entities.[1]}}}',
         ),
         RelationshipType(
             label='Edition',
             description='Represents the relationship between an edition and publication',
-            template='{{{entities.0}}} is an edition of {{{entities.1}}}',
+            template='{{{entities.[0]}}} is an edition of {{{entities.[1]}}}',
         ),
         RelationshipType(
             label='Publisher',
             description='Indicates that a publisher published an edition',
-            template='{{{entities.0}}} published {{{entities.1}}}',
+            template='{{{entities.[0]}}} published {{{entities.[1]}}}',
         ),
         RelationshipType(
             label='Editor',
             description='Indicates that a creator edited an edition',
-            template='{{{entities.0}}} edited {{{entities.1}}}',
+            template='{{{entities.[0]}}} edited {{{entities.[1]}}}',
         ),
         RelationshipType(
             label='Inspiration',
             description='Indicates that one work was the inspiration for another work',
-            template='{{{entities.0}}} was the inspiration for {{{entities.1}}}',
+            template='{{{entities.[0]}}} was the inspiration for {{{entities.[1]}}}',
         ),
         RelationshipType(
             label='Parody',
             description='Indicates that one work was the inspiration for another work',
-            template='{{{entities.0}}} was the inspiration for {{{entities.1}}}',
+            template='{{{entities.[0]}}} was the inspiration for {{{entities.[1]}}}',
         ),
     ]
 
@@ -136,13 +136,13 @@ def create_fixed(hostname, port, username, password, db_name):
         RelationshipType(
             label='Authored',
             description='Indicates that a creator is the author of a work',
-            template='{{{entities.0}}} authored {{{entities.1}}}',
+            template='{{{entities.[0]}}} authored {{{entities.[1]}}}',
             child_order=1,
         ),
         RelationshipType(
             label='Translated',
             description='Indicates that a creator translated a work',
-            template='{{{entities.0}}} translated {{{entities.1}}} to {{{entities.2}}}',
+            template='{{{entities.[0]}}} translated {{{entities.[1]}}} to {{{entities.2}}}',
             child_order=2,
         ),
     ]
