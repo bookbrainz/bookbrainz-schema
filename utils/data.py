@@ -142,7 +142,7 @@ def create_fixed(hostname, port, username, password, db_name):
         RelationshipType(
             label='Translated',
             description='Indicates that a creator translated a work',
-            template='{{{entities.[0]}}} translated {{{entities.[1]}}} to {{{entities.2}}}',
+            template='{{{entities.[0]}}} translated {{{entities.[1]}}} to {{{entities.[2]}}}',
             child_order=2,
         ),
     ]
