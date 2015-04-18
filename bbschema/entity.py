@@ -76,6 +76,14 @@ class Edition(Entity):
         'polymorphic_identity': 'Edition'
     }
 
+    publication = relationship(
+        'Publication',
+        primaryjoin='Edition.master_revision_id == EntityRevision.revision_id',
+        secondary='join(EntityRevision, EditionData, EntityRevision.entity_data_id == EditionData.entity_data_id)',
+        secondaryjoin='EditionData.publication_gid == Publication.entity_gid',
+        backref='editions'
+    )
+
 
 class Publisher(Entity):
     __mapper_args__ = {
