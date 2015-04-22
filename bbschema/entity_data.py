@@ -611,7 +611,7 @@ class EditionData(EntityData):
 
         publication_gid = data.get('publication_gid')
         if publication_gid is None:
-            abort(400)
+            return None
 
         publication =\
             session.query(Publication).get(data.get('publication_gid'))
