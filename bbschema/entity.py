@@ -123,7 +123,8 @@ class Annotation(Base):
 
     @classmethod
     def create(cls, revision_json):
-        if 'annotation' not in revision_json:
+        if (('annotation' not in revision_json) or
+                (revision_json['annotation'] is None)):
             return None
 
         return cls(content=revision_json['annotation'])
@@ -154,7 +155,8 @@ class Disambiguation(Base):
 
     @classmethod
     def create(cls, revision_json):
-        if 'disambiguation' not in revision_json:
+        if (('disambiguation' not in revision_json) or
+                (revision_json['disambiguation'] is None)):
             return None
 
         return cls(comment=revision_json['disambiguation'])
@@ -238,7 +240,7 @@ def create_aliases(revision_json):
 
 
 def update_aliases(aliases, default_alias_id, revision_json):
-    if 'aliases' not in revision_json:
+    if (('aliases' not in revision_json) or (revision_json['aliases'] is None)):
         return (aliases, None)
 
     # Create a dictionary, to make it easier look up aliases by ID

@@ -241,8 +241,16 @@ class EntityData(Base):
         # Create a new EntityData, copying the current data.
         new_data = self.copy()
 
-        new_data.annotation = self.annotation.update(data)
-        new_data.disambiguation = self.disambiguation.update(data)
+        if self.annotation is not None:
+            new_data.annotation = self.annotation.update(data)
+        else:
+            new_data.annotation = Annotation.create(data)
+
+        if self.disambiguation is not None:
+            new_data.disambiguation = self.disambiguation.update(data)
+        else:
+            new_data.disambiguation = Disambiguation.create(data)
+
         new_data.aliases, default_alias =\
             update_aliases(self.aliases, self.default_alias_id, data)
 
@@ -301,9 +309,9 @@ class PublicationData(EntityData):
         new_data = super(PublicationData, self).update(data, session)
 
         if (('publication_type' in data) and
-                ('publication_type' in data['publication_type_id'])):
-            new_data.creator_type_id =\
-                data['creator_type']['publication_type_id']
+                ('publication_type_id' in data['publication_type'])):
+            new_data.publication_type_id =\
+                data['publication_type']['publication_type_id']
 
         if new_data == self:
             return self
@@ -511,7 +519,7 @@ class PublisherData(EntityData):
         if 'country_id' in data:
             new_data.country_id = data['country_id']
         if (('publisher_type' in data) and
-                ('publisher_type' in data['publisher_type_id'])):
+                ('publisher_type_id' in data['publisher_type'])):
             new_data.publisher_type_id =\
                 data['publisher_type']['publisher_type_id']
 
@@ -641,7 +649,7 @@ class EditionData(EntityData):
         return new_data
 
     def update(self, data, session):
-        new_data = super(PublisherData, self).update(data, session)
+        new_data = super(EditionData, self).update(data, session)
 
         if 'begin_date' in data:
             new_data.begin_date = data['begin_date']
@@ -660,7 +668,7 @@ class EditionData(EntityData):
             new_data.edition_status_id =\
                 data['edition_status']['edition_status_id']
         if (('language' in data) and
-                ('language' in data['language_id'])):
+                ('language_id' in data['language'])):
             new_data.language_id = data['language']['language_id']
 
         if new_data == self:
@@ -669,7 +677,7 @@ class EditionData(EntityData):
             return new_data
 
     def copy(self):
-        copied_data = super(CreatorData, self).copy()
+        copied_data = super(EditionData, self).copy()
 
         copied_data.begin_date = self.begin_date
         copied_data.begin_date_precision = self.begin_date_precision
@@ -741,7 +749,7 @@ class WorkData(EntityData):
         return new_data
 
     def update(self, data, session):
-        new_data = super(PublisherData, self).update(data, session)
+        new_data = super(WorkData, self).update(data, session)
 
         if 'begin_date' in data:
             new_data.begin_date = data['begin_date']
@@ -756,11 +764,19 @@ class WorkData(EntityData):
         if 'country_id' in data:
             new_data.country_id = data['country_id']
         if (('work_type' in data) and
-                ('work_type' in data['work_type_id'])):
-            new_data.language_id = data['work_type']['work_type_id']
-        if (('language' in data) and
-                ('language' in data['language_id'])):
-            new_data.language_id = data['language']['language_id']
+                ('work_type_id' in data['work_type'])):
+            new_data.work_type_id = data['work_type']['work_type_id']
+
+        if 'languages' in data:
+            languages = data['languages']
+            removed_language_ids = [old for old, new in languages if new is None]
+            added_language_ids = [new for old, new in languages if old is None]
+            new_data.languages = [x for x in new_data.languages if x.language_id not in removed_language_ids]
+
+            for language_id in added_language_ids:
+                language = session.query(Language).get(language_id)
+                if language is not None:
+                    new_data.languages.append(language)
 
         if new_data == self:
             return self
@@ -768,7 +784,7 @@ class WorkData(EntityData):
             return new_data
 
     def copy(self):
-        copied_data = super(CreatorData, self).copy()
+        copied_data = super(WorkData, self).copy()
 
         copied_data.work_type_id = self.work_type_id
         copied_data.languages = self.languages
