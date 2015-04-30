@@ -60,6 +60,17 @@ def create_fixed(hostname, port, username, password, db_name):
     ]
     session.add_all(publisher_types)
 
+    # Add Edition Formats
+    edition_formats = [
+        EditionFormat(label='Paperback'),
+        EditionFormat(label='Hardcover'),
+        EditionFormat(label='Mass Market Paperback'),
+        EditionFormat(label='eBook'),
+        EditionFormat(label='Library Binding'),
+        EditionFormat(label='Audiobook'),
+    ]
+    session.add_all(edition_formats)
+
     # Add Edition Statuses
     edition_statuses = [
         EditionStatus(label='Official'),

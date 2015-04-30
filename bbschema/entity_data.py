@@ -576,6 +576,9 @@ class EditionData(EntityData):
 
     country_id = Column(Integer)
     language_id = Column(Integer, ForeignKey('musicbrainz.language.id'))
+    edition_format_id = Column(
+        Integer, ForeignKey('bookbrainz.edition_format.edition_format_id')
+    )
     edition_status_id = Column(
         Integer, ForeignKey('bookbrainz.edition_status.edition_status_id')
     )
@@ -587,6 +590,7 @@ class EditionData(EntityData):
     publication = relationship('Publication', foreign_keys=[publication_gid])
     creator_credit = relationship('CreatorCredit')
     language = relationship('Language')
+    edition_format = relationship('EditionFormat')
     edition_status = relationship('EditionStatus')
     publisher = relationship('Publisher', foreign_keys=[publisher_gid])
 
@@ -598,6 +602,7 @@ class EditionData(EntityData):
         if (self.release_date == other.release_date and
                 self.release_date_precision == other.release_date_precision and
                 self.country_id == other.country_id and
+                self.edition_format_id == other.edition_format_id and
                 self.edition_status_id == other.edition_status_id and
                 self.language_id == other.language_id and
                 super(EditionData, self).__eq__(other)):
@@ -625,6 +630,8 @@ class EditionData(EntityData):
         new_data.country_id = data.get('country_id')
         new_data.language_id =\
             data.get('language', {}).get('language_id')
+        new_data.edition_format_id =\
+            data.get('edition_format', {}).get('edition_format_id')
         new_data.edition_status_id =\
             data.get('edition_status', {}).get('edition_status_id')
 
@@ -646,6 +653,10 @@ class EditionData(EntityData):
             new_data.release_date_precision = data['release_date_precision']
         if 'country_id' in data:
             new_data.country_id = data['country_id']
+        if (('edition_format' in data) and
+                ('edition_format' in data['edition_format_id'])):
+            new_data.edition_format_id =\
+                data['edition_format']['edition_format_id']
         if (('edition_status' in data) and
                 ('edition_status' in data['edition_status_id'])):
             new_data.edition_status_id =\
@@ -664,11 +675,20 @@ class EditionData(EntityData):
 
         copied_data.release_date = self.release_date
         copied_data.release_date_precision = self.release_date_precision
+        copied_data.edition_format_id = self.edition_format_id
         copied_data.edition_status_id = self.edition_status_id
         copied_data.country_id = self.country_id
         copied_data.language_id = self.language_id
 
         return copied_data
+
+
+class EditionFormat(Base):
+    __tablename__ = 'edition_format'
+    __table_args__ = {'schema': 'bookbrainz'}
+
+    edition_format_id = Column(Integer, primary_key=True)
+    label = Column(UnicodeText, nullable=False, unique=True)
 
 
 class EditionStatus(Base):
