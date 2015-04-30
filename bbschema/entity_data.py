@@ -567,15 +567,10 @@ class EditionData(EntityData):
         Integer, ForeignKey('bookbrainz.creator_credit.creator_credit_id')
     )
 
-    begin_date = Column(Date)
-    begin_date_precision = Column(
+    release_date = Column(Date)
+    release_date_precision = Column(
         Enum('YEAR', 'MONTH', 'DAY', name='date_precision')
     )
-    end_date = Column(Date)
-    end_date_precision = Column(
-        Enum('YEAR', 'MONTH', 'DAY', name='date_precision')
-    )
-    ended = Column(Boolean, server_default='false')
 
     # TODO: add script ID, when that's replicated from MB
 
@@ -600,11 +595,8 @@ class EditionData(EntityData):
     }
 
     def __eq__(self, other):
-        if (self.begin_date == other.begin_date and
-                self.begin_date_precision == other.begin_date_precision and
-                self.end_date == other.end_date and
-                self.end_date_precision == other.end_date_precision and
-                self.ended == other.ended and
+        if (self.release_date == other.release_date and
+                self.release_date_precision == other.release_date_precision and
                 self.country_id == other.country_id and
                 self.edition_status_id == other.edition_status_id and
                 self.language_id == other.language_id and
@@ -628,11 +620,8 @@ class EditionData(EntityData):
         new_data.creator_credit =\
             CreatorCredit.create(data.get('creator_credit'), session)
 
-        new_data.begin_date = data.get('begin_date')
-        new_data.begin_date_precision = data.get('begin_date_precision')
-        new_data.end_date = data.get('end_date')
-        new_data.end_date_precision = data.get('end_date_precision')
-        new_data.ended = data.get('ended', False)
+        new_data.release_date = data.get('release_date')
+        new_data.release_date_precision = data.get('release_date_precision')
         new_data.country_id = data.get('country_id')
         new_data.language_id =\
             data.get('language', {}).get('language_id')
@@ -651,16 +640,10 @@ class EditionData(EntityData):
     def update(self, data, session):
         new_data = super(EditionData, self).update(data, session)
 
-        if 'begin_date' in data:
-            new_data.begin_date = data['begin_date']
-        if 'begin_date_precision' in data:
-            new_data.begin_date_precision = data['begin_date_precision']
-        if 'end_date' in data:
-            new_data.end_date = data['end_date']
-        if 'end_date_precision' in data:
-            new_data.end_date_precision = data['end_date_precision']
-        if 'ended' in data:
-            new_data.ended = data['ended']
+        if 'release_date' in data:
+            new_data.release_date = data['release_date']
+        if 'release_date_precision' in data:
+            new_data.release_date_precision = data['release_date_precision']
         if 'country_id' in data:
             new_data.country_id = data['country_id']
         if (('edition_status' in data) and
@@ -679,11 +662,8 @@ class EditionData(EntityData):
     def copy(self):
         copied_data = super(EditionData, self).copy()
 
-        copied_data.begin_date = self.begin_date
-        copied_data.begin_date_precision = self.begin_date_precision
-        copied_data.end_date = self.end_date
-        copied_data.end_date_precision = self.end_date_precision
-        copied_data.ended = self.ended
+        copied_data.release_date = self.release_date
+        copied_data.release_date_precision = self.release_date_precision
         copied_data.edition_status_id = self.edition_status_id
         copied_data.country_id = self.country_id
         copied_data.language_id = self.language_id
