@@ -22,9 +22,9 @@ from .user import (User, UserType, InactiveUser, SuspendedUser, OAuthClient,
                    Message, MessageReceipt, UserLanguage)
 from .entity_data import (EntityData, PublicationData, PublicationType,
                           CreatorData, CreatorType, PublisherData,
-                          PublisherType, EditionData, EditionStatus, WorkData,
-                          WorkType, CreatorCredit, CreatorCreditName,
-                          Identifier, IdentifierType)
+                          PublisherType, EditionData, EditionStatus,
+                          EditionFormat, WorkData, WorkType, CreatorCredit,
+                          CreatorCreditName, Identifier, IdentifierType)
 from .revision import (Revision, EntityRevision, RelationshipRevision,
                        RevisionNote)
 from .musicbrainz import (Gender, Language)
