@@ -560,7 +560,7 @@ class EditionData(EntityData):
     )
 
     publication_gid = Column(
-        UUID(as_uuid=True), ForeignKey(Publication.entity_gid), nullable=False
+        UUID(as_uuid=True), ForeignKey(Publication.entity_gid)
     )
 
     creator_credit_id = Column(

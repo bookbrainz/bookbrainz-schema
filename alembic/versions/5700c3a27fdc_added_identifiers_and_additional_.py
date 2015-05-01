@@ -65,7 +65,7 @@ def upgrade():
     )
 
     op.add_column(u'edition_data', sa.Column('creator_credit_id', sa.Integer(), nullable=True), schema=u'bookbrainz')
-    op.add_column(u'edition_data', sa.Column('publication_gid', postgresql.UUID(as_uuid=True), nullable=False), schema=u'bookbrainz')
+    op.add_column(u'edition_data', sa.Column('publication_gid', postgresql.UUID(as_uuid=True), nullable=True), schema=u'bookbrainz')
     op.add_column(u'edition_data', sa.Column('publisher_gid', postgresql.UUID(as_uuid=True), nullable=True), schema=u'bookbrainz')
     op.create_foreign_key(u'edition_data_creator_credit_id_fkey', 'edition_data', 'creator_credit', ['creator_credit_id'], ['creator_credit_id'], source_schema='bookbrainz', referent_schema='bookbrainz')
     op.create_foreign_key(u'edition_data_publication_gid_fkey', 'edition_data', 'entity', ['publication_gid'], ['entity_gid'], source_schema='bookbrainz', referent_schema='bookbrainz')
