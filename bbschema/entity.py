@@ -21,7 +21,7 @@ base class for all resource models specified in this package."""
 import sqlalchemy.sql as sql
 from bbschema.base import Base
 from sqlalchemy import (Boolean, Column, DateTime, Enum, ForeignKey, Integer,
-                        UnicodeText)
+                        Unicode, UnicodeText, UniqueConstraint)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import text
@@ -195,12 +195,6 @@ class Alias(Base):
         return Alias(name=self.name, sort_name=self.sort_name,
                      language_id=self.language_id, primary=self.primary)
 
-    def _update_from_json(self, data):
-        self.name = data.get('name') or self.name
-        self.sort_name = data.get('sort_name') or self.sort_name
-        self.language_id = data.get('language_id') or self.language_id
-        self.primary = data.get('primary') or self.primary
-
     @classmethod
     def create(cls, alias_json):
         return cls(
@@ -223,6 +217,75 @@ class Alias(Base):
             new.primary = alias_json['primary']
 
         return new
+
+
+class Identifier(Base):
+    __tablename__ = 'identifier'
+    __table_args__ = {'schema': 'bookbrainz'}
+
+    identifier_id = Column(Integer, primary_key=True)
+    identifier_type_id = Column(
+        Integer, ForeignKey('bookbrainz.identifier_type.identifier_type_id'),
+        nullable=False
+    )
+
+    value = Column(UnicodeText, nullable=False)
+
+    identifier_type = relationship('IdentifierType')
+
+    @classmethod
+    def create(cls, identifier_json):
+        new_identifier = cls()
+
+        new_identifier.identifier_type_id =\
+            identifier_json.get('identifier_type', {}).get('identifier_type_id')
+
+        new_identifier.value = identifier_json.get('value')
+
+        return new_identifier
+
+    @classmethod
+    def update(self, identifier_json):
+        new = self.copy()
+
+        if 'value' in identifier_json:
+            new.value = identifier_json['name']
+        if 'identifier_type_id' in identifier_json:
+            new.identifier_type_id =\
+                identifier_json.get('identifier_type', {}).\
+                    get('identifier_type_id')
+
+        return new
+
+
+class IdentifierType(Base):
+    __tablename__ = 'identifier_type'
+    __table_args__ = {'schema': 'bookbrainz'}
+
+    identifier_type_id = Column(Integer, primary_key=True)
+    label = Column(Unicode(255), nullable=False)
+
+    entity_type = Column(
+        Enum(
+            'Creator', 'Publication', 'Edition', 'Publisher', 'Work',
+            name='entity_types'
+        ),
+        nullable=False
+    )
+
+    detection_regex = Column(UnicodeText, nullable=False)
+    validation_regex = Column(UnicodeText, nullable=False)
+
+    parent_id = Column(
+        Integer, ForeignKey('bookbrainz.identifier_type.identifier_type_id')
+    )
+
+    child_order = Column(Integer, nullable=False, server_default=text('0'))
+    description = Column(UnicodeText, nullable=False)
+
+    parent = relationship('IdentifierType')
+
+    UniqueConstraint('label', 'entity_type')
 
 
 def create_aliases(revision_json):
@@ -266,3 +329,37 @@ def update_aliases(aliases, default_alias_id, revision_json):
         default_alias = alias_dict.get(default_alias_id, None)
 
     return (list(alias_dict.values()) + new_aliases, default_alias)
+
+
+def create_identifiers(revision_json):
+    print revision_json
+    if 'identifiers' not in revision_json:
+        return []
+
+    identifiers = [Identifier.create(identifier)
+                   for identifier in revision_json['identifiers']]
+
+    return identifiers
+
+
+def update_identifiers(identifiers, revision_json):
+    if (('identifiers' not in revision_json) or
+            (revision_json['identifiers'] is None)):
+        return (identifiers, None)
+
+    # Create a dictionary, to make it easier look up aliases by ID
+    identifier_dict = dict((identifier.identifier_id, identifier)
+                           for identifier in identifiers)
+
+    new_identifiers = []
+    for identifier_id, identifier_json in revision_json['identifiers']:
+        if identifier_json is None:
+            del identifier_dict[identifier_id]
+        else:
+            if identifier_id is None:
+                new_identifiers.append(Identifier.create(alias_json))
+            else:
+                identifier_dict[identifier_id] = \
+                    identifier_dict[identifier_id].update(identifier_json)
+
+    return list(identifier_dict.values()) + new_identifiers
