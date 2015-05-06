@@ -273,7 +273,7 @@ class IdentifierType(Base):
         nullable=False
     )
 
-    detection_regex = Column(UnicodeText, nullable=False)
+    detection_regex = Column(UnicodeText)
     validation_regex = Column(UnicodeText, nullable=False)
 
     parent_id = Column(
