@@ -121,6 +121,10 @@ class Annotation(Base):
     def copy(self):
         return Annotation(content=self.content, created_at=self.created_at)
 
+    def __eq__(self, other):
+        return ((self.content == other.content) and
+                (self.created_at == other.created_at))
+
     @classmethod
     def create(cls, revision_json):
         if (('annotation' not in revision_json) or
@@ -152,6 +156,9 @@ class Disambiguation(Base):
     def copy(self):
         cls = type(self)
         return cls(comment=self.comment)
+
+    def __eq__(self, other):
+        return (self.comment == other.comment)
 
     @classmethod
     def create(cls, revision_json):
@@ -195,6 +202,12 @@ class Alias(Base):
         return Alias(name=self.name, sort_name=self.sort_name,
                      language_id=self.language_id, primary=self.primary)
 
+    def __eq__(self, other):
+        return ((self.name == other.name) and
+                (self.sort_name == other.sort_name) and
+                (self.language_id == other.language_id) and
+                (self.primary == other.primary))
+
     @classmethod
     def create(cls, alias_json):
         return cls(
@@ -233,6 +246,14 @@ class Identifier(Base):
 
     identifier_type = relationship('IdentifierType')
 
+    def copy(self):
+        return Identifier(value=self.value,
+                          identifier_type_id=self.identifier_type_id)
+
+    def __eq__(self, other):
+        return ((self.value == other.value) and
+                (self.identifier_type_id == other.identifier_type_id))
+
     @classmethod
     def create(cls, identifier_json):
         new_identifier = cls()
@@ -244,12 +265,11 @@ class Identifier(Base):
 
         return new_identifier
 
-    @classmethod
     def update(self, identifier_json):
         new = self.copy()
 
         if 'value' in identifier_json:
-            new.value = identifier_json['name']
+            new.value = identifier_json['value']
         if 'identifier_type_id' in identifier_json:
             new.identifier_type_id =\
                 identifier_json.get('identifier_type', {}).\
@@ -357,7 +377,7 @@ def update_identifiers(identifiers, revision_json):
             del identifier_dict[identifier_id]
         else:
             if identifier_id is None:
-                new_identifiers.append(Identifier.create(alias_json))
+                new_identifiers.append(Identifier.create(identifier_json))
             else:
                 identifier_dict[identifier_id] = \
                     identifier_dict[identifier_id].update(identifier_json)
