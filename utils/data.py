@@ -93,13 +93,45 @@ def create_fixed(hostname, port, username, password, db_name):
 
     identifier_types = [
         IdentifierType(
-            label='ISBN-13',
-            description='13-digit International Standard Book Number',
+            label='MusicBrainz Release ID',
+            description='UUID corresponding to a Release in MusicBrainz',
+            detection_regex=r'musicbrainz\.org\/release\/([a-f0-9]{8}-?[a-f0-9]{4}-?[a-f0-9]{4}-?[a-f0-9]{4}-?[a-f0-9]{12})',
+            validation_regex=r'^[a-f0-9]{8}-?[a-f0-9]{4}-?[a-f0-9]{4}-?[a-f0-9]{4}-?[a-f0-9]{12}$',
             entity_type = 'Edition'
         ),
         IdentifierType(
-            label='Barcode',
-            description='EAN, UPC or other printed barcode',
+            label='MusicBrainz Artist ID',
+            description='UUID corresponding to an Artist in MusicBrainz',
+            detection_regex=r'musicbrainz\.org\/artist\/([a-f0-9]{8}-?[a-f0-9]{4}-?[a-f0-9]{4}-?[a-f0-9]{4}-?[a-f0-9]{12})',
+            validation_regex=r'^[a-f0-9]{8}-?[a-f0-9]{4}-?[a-f0-9]{4}-?[a-f0-9]{4}-?[a-f0-9]{12}$',
+            entity_type = 'Creator'
+        ),
+        IdentifierType(
+            label='MusicBrainz Work ID',
+            description='UUID corresponding to a Work in MusicBrainz',
+            detection_regex=r'musicbrainz\.org\/work\/([a-f0-9]{8}-?[a-f0-9]{4}-?[a-f0-9]{4}-?[a-f0-9]{4}-?[a-f0-9]{12})',
+            validation_regex=r'^[a-f0-9]{8}-?[a-f0-9]{4}-?[a-f0-9]{4}-?[a-f0-9]{4}-?[a-f0-9]{12}$',
+            entity_type = 'Work'
+        ),
+        IdentifierType(
+            label='Amazon ASIN',
+            detection_regex=r'amazon\.*?\/(?:\.*?\/)*?(B\d{2}\w{7}|\d{9}[X\d])',
+            validation_regex=r'^(?:B\d{2}\w{7}|\d{9}[X\d])$',
+            description='ASIN of an edition available on Amazon',
+            entity_type = 'Edition'
+        ),
+        IdentifierType(
+            label='ISBN-13',
+            description='13-digit International Standard Book Number',
+            detection_regex=r'((?:\d-?){12}[X\d])',
+            validation_regex=r'^(?:\d-?){12}[X\d]$',
+            entity_type = 'Edition'
+        ),
+        IdentifierType(
+            label='ISBN-10',
+            description='10-digit International Standard Book Number',
+            detection_regex=r'((?:\d-?){9}[X\d])',
+            validation_regex=r'^(?:\d-?){9}[X\d]$',
             entity_type = 'Edition'
         )
     ]
