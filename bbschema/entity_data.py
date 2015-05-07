@@ -18,6 +18,8 @@
 """This module specifies a class, Resource, which is designed to be used as the
 base class for all resource models specified in this package."""
 
+import datetime
+
 from bbschema.base import Base
 from bbschema.entity import (Annotation, Creator, Disambiguation, Publication,
                              Publisher, create_aliases, create_identifiers,
@@ -67,6 +69,21 @@ WORK_DATA__LANGUAGE = Table(
     ),
     schema='bookbrainz'
 )
+
+def parse_date_string(date_string):
+    if date_string is None:
+        return None
+
+    parts = date_string.split('-')
+    # yyyy-mm-dd
+    if len(parts) == 3:
+        return datetime.date(int(parts[0]), int(parts[1]), int(parts[2])), 'DAY'
+    elif len(parts) == 2:
+        return datetime.date(int(parts[0]), int(parts[1]), 1), 'MONTH'
+    elif len(parts) == 1:
+        return datetime.date(int(parts[0]), 1, 1), 'YEAR'
+    else:
+        return None
 
 
 class CreatorCredit(Base):
@@ -575,9 +592,11 @@ class EditionData(EntityData):
 
         new_data.creator_credit =\
             CreatorCredit.create(data.get('creator_credit'), session)
+        parsed_date_info = parse_date_string(data.get('release_date'))
+        if parsed_date_info is not None:
+            new_data.release_date = parsed_date_info[0]
+            new_data.release_date_precision = parsed_date_info[1]
 
-        new_data.release_date = data.get('release_date')
-        new_data.release_date_precision = data.get('release_date_precision')
         new_data.country_id = data.get('country_id')
         new_data.language_id =\
             data.get('language', {}).get('language_id')
