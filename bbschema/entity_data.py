@@ -352,10 +352,16 @@ class CreatorData(EntityData):
     def create(cls, data, session):
         new_data = super(CreatorData, cls).create(data, session)
 
-        new_data.begin_date = data.get('begin_date')
-        new_data.begin_date_precision = data.get('begin_date_precision')
-        new_data.end_date = data.get('end_date')
-        new_data.end_date_precision = data.get('end_date_precision')
+        parsed_date_info = parse_date_string(data.get('begin_date'))
+        if parsed_date_info is not None:
+            new_data.begin_date = parsed_date_info[0]
+            new_data.begin_date_precision = parsed_date_info[1]
+
+        parsed_date_info = parse_date_string(data.get('end_date'))
+        if parsed_date_info is not None:
+            new_data.end_date = parsed_date_info[0]
+            new_data.end_date_precision = parsed_date_info[1]
+
         new_data.ended = data.get('ended', False)
         new_data.country_id = data.get('country_id')
         new_data.gender_id = data.get('gender', {}).get('gender_id')
@@ -367,14 +373,16 @@ class CreatorData(EntityData):
     def update(self, data, session):
         new_data = super(CreatorData, self).update(data, session)
 
-        if 'begin_date' in data:
-            new_data.begin_date = data['begin_date']
-        if 'begin_date_precision' in data:
-            new_data.begin_date_precision = data['begin_date_precision']
-        if 'end_date' in data:
-            new_data.end_date = data['end_date']
-        if 'end_date_precision' in data:
-            new_data.end_date_precision = data['end_date_precision']
+        parsed_date_info = parse_date_string(data.get('begin_date'))
+        if parsed_date_info is not None:
+            new_data.begin_date = parsed_date_info[0]
+            new_data.begin_date_precision = parsed_date_info[1]
+
+        parsed_date_info = parse_date_string(data.get('end_date'))
+        if parsed_date_info is not None:
+            new_data.end_date = parsed_date_info[0]
+            new_data.end_date_precision = parsed_date_info[1]
+
         if 'ended' in data:
             new_data.ended = data['ended']
         if 'country_id' in data:
@@ -460,10 +468,16 @@ class PublisherData(EntityData):
     def create(cls, data, session):
         new_data = super(PublisherData, cls).create(data, session)
 
-        new_data.begin_date = data.get('begin_date')
-        new_data.begin_date_precision = data.get('begin_date_precision')
-        new_data.end_date = data.get('end_date')
-        new_data.end_date_precision = data.get('end_date_precision')
+        parsed_date_info = parse_date_string(data.get('begin_date'))
+        if parsed_date_info is not None:
+            new_data.begin_date = parsed_date_info[0]
+            new_data.begin_date_precision = parsed_date_info[1]
+
+        parsed_date_info = parse_date_string(data.get('end_date'))
+        if parsed_date_info is not None:
+            new_data.end_date = parsed_date_info[0]
+            new_data.end_date_precision = parsed_date_info[1]
+
         new_data.ended = data.get('ended', False)
         new_data.country_id = data.get('country_id')
         new_data.publisher_type_id =\
@@ -474,14 +488,16 @@ class PublisherData(EntityData):
     def update(self, data, session):
         new_data = super(PublisherData, self).update(data, session)
 
-        if 'begin_date' in data:
-            new_data.begin_date = data['begin_date']
-        if 'begin_date_precision' in data:
-            new_data.begin_date_precision = data['begin_date_precision']
-        if 'end_date' in data:
-            new_data.end_date = data['end_date']
-        if 'end_date_precision' in data:
-            new_data.end_date_precision = data['end_date_precision']
+        parsed_date_info = parse_date_string(data.get('begin_date'))
+        if parsed_date_info is not None:
+            new_data.begin_date = parsed_date_info[0]
+            new_data.begin_date_precision = parsed_date_info[1]
+
+        parsed_date_info = parse_date_string(data.get('end_date'))
+        if parsed_date_info is not None:
+            new_data.end_date = parsed_date_info[0]
+            new_data.end_date_precision = parsed_date_info[1]
+
         if 'ended' in data:
             new_data.ended = data['ended']
         if 'country_id' in data:
@@ -605,22 +621,23 @@ class EditionData(EntityData):
         new_data.edition_status_id =\
             data.get('edition_status', {}).get('edition_status_id')
 
-        publisher_gid = data.get('publisher_gid')
-        if publisher_gid is not None:
-            publisher =\
-                session.query(Publisher).get()
+        #publisher_gid = data.get('publisher_gid')
+        #if publisher_gid is not None:
+        #    publisher =\
+        #        session.query(Publisher).get()
 
-            new_data.publisher = publisher
+        #    new_data.publisher = publisher
 
         return new_data
 
     def update(self, data, session):
         new_data = super(EditionData, self).update(data, session)
 
-        if 'release_date' in data:
-            new_data.release_date = data['release_date']
-        if 'release_date_precision' in data:
-            new_data.release_date_precision = data['release_date_precision']
+        parsed_date_info = parse_date_string(data.get('release_date'))
+        if parsed_date_info is not None:
+            new_data.release_date = parsed_date_info[0]
+            new_data.release_date_precision = parsed_date_info[1]
+
         if 'country_id' in data:
             new_data.country_id = data['country_id']
         if (('edition_format' in data) and
@@ -700,11 +717,6 @@ class WorkData(EntityData):
     def create(cls, data, session):
         new_data = super(WorkData, cls).create(data, session)
 
-        new_data.begin_date = data.get('begin_date')
-        new_data.begin_date_precision = data.get('begin_date_precision')
-        new_data.end_date = data.get('end_date')
-        new_data.end_date_precision = data.get('end_date_precision')
-        new_data.ended = data.get('ended', False)
         new_data.country_id = data.get('country_id')
         new_data.language_id = data.get('language_id')
         new_data.work_type_id =\
@@ -721,16 +733,6 @@ class WorkData(EntityData):
     def update(self, data, session):
         new_data = super(WorkData, self).update(data, session)
 
-        if 'begin_date' in data:
-            new_data.begin_date = data['begin_date']
-        if 'begin_date_precision' in data:
-            new_data.begin_date_precision = data['begin_date_precision']
-        if 'end_date' in data:
-            new_data.end_date = data['end_date']
-        if 'end_date_precision' in data:
-            new_data.end_date_precision = data['end_date_precision']
-        if 'ended' in data:
-            new_data.ended = data['ended']
         if 'country_id' in data:
             new_data.country_id = data['country_id']
         if (('work_type' in data) and
