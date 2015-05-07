@@ -605,11 +605,11 @@ class EditionData(EntityData):
         if 'country_id' in data:
             new_data.country_id = data['country_id']
         if (('edition_format' in data) and
-                ('edition_format' in data['edition_format_id'])):
+                ('edition_format_id' in data['edition_format'])):
             new_data.edition_format_id =\
                 data['edition_format']['edition_format_id']
         if (('edition_status' in data) and
-                ('edition_status' in data['edition_status_id'])):
+                ('edition_status_id' in data['edition_status'])):
             new_data.edition_status_id =\
                 data['edition_status']['edition_status_id']
         if (('language' in data) and
