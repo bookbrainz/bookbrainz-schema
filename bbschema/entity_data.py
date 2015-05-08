@@ -598,12 +598,12 @@ class EditionData(EntityData):
     def create(cls, data, session):
         new_data = super(EditionData, cls).create(data, session)
 
-        publication_gid = data.get('publication_gid')
+        publication_gid = data.get('publication')
         if publication_gid is None:
             return None
 
         publication =\
-            session.query(Publication).get(data.get('publication_gid'))
+            session.query(Publication).filter_by(entity_gid=publication_gid).one()
         new_data.publication = publication
 
         new_data.creator_credit =\
@@ -621,12 +621,12 @@ class EditionData(EntityData):
         new_data.edition_status_id =\
             data.get('edition_status', {}).get('edition_status_id')
 
-        #publisher_gid = data.get('publisher_gid')
-        #if publisher_gid is not None:
-        #    publisher =\
-        #        session.query(Publisher).get()
+        publisher_gid = data.get('publisher')
+        if publisher_gid is not None:
+            publisher =\
+                session.query(Publisher).filter_by(entity_gid=publisher_gid).one()
 
-        #    new_data.publisher = publisher
+            new_data.publisher = publisher
 
         return new_data
 
