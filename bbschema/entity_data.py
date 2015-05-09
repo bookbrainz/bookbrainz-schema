@@ -88,11 +88,11 @@ def parse_date_string(date_string):
 
 def format_date(date, precision):
     if precision == 'YEAR':
-        return '{}'.format(date.year)
+        return '{:02}'.format(date.year)
     elif precision == 'MONTH':
-        return '{}-{}'.format(date.year, date.month)
+        return '{:02}-{:02}'.format(date.year, date.month)
     else:
-        return '{}-{}-{}'.format(date.year, date.month, date.day)
+        return '{:02}-{:02}-{:02}'.format(date.year, date.month, date.day)
 
 class CreatorCredit(Base):
     __tablename__ = 'creator_credit'
