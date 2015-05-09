@@ -86,6 +86,14 @@ def parse_date_string(date_string):
         return None
 
 
+def format_date(date, precision):
+    if precision == 'YEAR':
+        return '{}'.format(date.year)
+    elif precision == 'MONTH':
+        return '{}-{}'.format(date.year, date.month)
+    else:
+        return '{}-{}-{}'.format(date.year, date.month, date.day)
+
 class CreatorCredit(Base):
     __tablename__ = 'creator_credit'
     __table_args__ = {'schema': 'bookbrainz'}
@@ -315,10 +323,20 @@ class CreatorData(EntityData):
     begin_date_precision = Column(
         Enum('YEAR', 'MONTH', 'DAY', name='date_precision')
     )
+
+    @property
+    def begin(self):
+        return format_date(self.begin_date, self.begin_date_precision)
+
     end_date = Column(Date)
     end_date_precision = Column(
         Enum('YEAR', 'MONTH', 'DAY', name='date_precision')
     )
+
+    @property
+    def end(self):
+        return format_date(self.end_date, self.end_date_precision)
+
     ended = Column(Boolean, server_default='false')
 
     country_id = Column(Integer)
@@ -434,10 +452,20 @@ class PublisherData(EntityData):
     begin_date_precision = Column(
         Enum('YEAR', 'MONTH', 'DAY', name='date_precision')
     )
+
+    @property
+    def begin(self):
+        return format_date(self.begin_date, self.begin_date_precision)
+
     end_date = Column(Date)
     end_date_precision = Column(
         Enum('YEAR', 'MONTH', 'DAY', name='date_precision')
     )
+
+    @property
+    def end(self):
+        return format_date(self.end_date, self.end_date_precision)
+
     ended = Column(Boolean, server_default='false')
 
     country_id = Column(Integer)
@@ -555,6 +583,10 @@ class EditionData(EntityData):
     release_date_precision = Column(
         Enum('YEAR', 'MONTH', 'DAY', name='date_precision')
     )
+
+    @property
+    def release(self):
+        return format_date(self.release_date, self.release_date_precision)
 
     # TODO: add script ID, when that's replicated from MB
 
