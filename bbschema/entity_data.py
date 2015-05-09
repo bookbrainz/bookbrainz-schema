@@ -606,8 +606,8 @@ class EditionData(EntityData):
             session.query(Publication).filter_by(entity_gid=publication_gid).one()
         new_data.publication = publication
 
-        new_data.creator_credit =\
-            CreatorCredit.create(data.get('creator_credit'), session)
+        #new_data.creator_credit =\
+        #    CreatorCredit.create(data.get('creator_credit'), session)
         parsed_date_info = parse_date_string(data.get('release_date'))
         if parsed_date_info is not None:
             new_data.release_date = parsed_date_info[0]
