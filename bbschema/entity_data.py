@@ -621,6 +621,8 @@ class EditionData(EntityData):
                 self.edition_format_id == other.edition_format_id and
                 self.edition_status_id == other.edition_status_id and
                 self.language_id == other.language_id and
+                self.publication_gid == other.publication_gid and
+                self.publisher_gid == other.publisher_gid and
                 super(EditionData, self).__eq__(other)):
             return True
 
@@ -683,6 +685,17 @@ class EditionData(EntityData):
         if (('language' in data) and
                 ('language_id' in data['language'])):
             new_data.language_id = data['language']['language_id']
+        if 'publication' in data:
+            publication = session.query(Publication).\
+                filter_by(entity_gid=data['publication']).one()
+            new_data.publication = publication
+        if 'publisher' in data:
+            if data['publisher'] is None:
+                new_data.publisher = None
+            else:
+                publisher = session.query(Publisher).\
+                    filter_by(entity_gid=data['publisher']).one()
+                new_data.publisher = publisher
 
         if new_data == self:
             return self
@@ -698,6 +711,8 @@ class EditionData(EntityData):
         copied_data.edition_status_id = self.edition_status_id
         copied_data.country_id = self.country_id
         copied_data.language_id = self.language_id
+        copied_data.publication_gid = self.publication_gid
+        copied_data.publisher_gid = self.publisher_gid
 
         return copied_data
 
