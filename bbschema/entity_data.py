@@ -24,7 +24,7 @@ from bbschema.base import Base
 from bbschema.entity import (Annotation, Creator, Disambiguation, Publication,
                              Publisher, create_aliases, create_identifiers,
                              update_aliases, update_identifiers)
-from bbschema.musicbrainz import Language
+from bbschema.musicbrainz import Language, Gender
 from sqlalchemy import (Boolean, Column, Date, Enum, ForeignKey, Integer,
                         SmallInteger, Table, Unicode, UnicodeText)
 from sqlalchemy.dialects.postgresql import UUID
@@ -345,7 +345,7 @@ class CreatorData(EntityData):
         Integer, ForeignKey('bookbrainz.creator_type.creator_type_id')
     )
 
-    gender = relationship('Gender')
+    gender = relationship(Gender)
     creator_type = relationship('CreatorType')
 
     __mapper_args__ = {
@@ -605,7 +605,7 @@ class EditionData(EntityData):
 
     publication = relationship('Publication', foreign_keys=[publication_gid])
     creator_credit = relationship('CreatorCredit')
-    language = relationship('Language')
+    language = relationship(Language)
     edition_format = relationship('EditionFormat')
     edition_status = relationship('EditionStatus')
     publisher = relationship('Publisher', foreign_keys=[publisher_gid])
@@ -746,7 +746,7 @@ class WorkData(EntityData):
                           ForeignKey('bookbrainz.work_type.work_type_id'))
 
     work_type = relationship('WorkType')
-    languages = relationship('Language', secondary=WORK_DATA__LANGUAGE)
+    languages = relationship(Language, secondary=WORK_DATA__LANGUAGE)
 
     __mapper_args__ = {
         'polymorphic_identity': 5,

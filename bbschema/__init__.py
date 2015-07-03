@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from .base import Base
+
 from .entity import (Entity, EntityRedirect,
                      Annotation, Disambiguation, Alias, Creator, Publication,
                      Edition, Publisher, Work, Identifier, IdentifierType)
@@ -25,13 +27,12 @@ from .entity_data import (EntityData, PublicationData, PublicationType,
                           PublisherType, EditionData, EditionStatus,
                           EditionFormat, WorkData, WorkType, CreatorCredit,
                           CreatorCreditName)
+from .musicbrainz import Gender, Language
 from .revision import (Revision, EntityRevision, RelationshipRevision,
                        RevisionNote)
-from .musicbrainz import (Gender, Language)
+
 from .relationships import (Relationship, RelationshipType, RelationshipData,
                             RelationshipEntity, RelationshipText)
-
-from .base import Base
 
 
 def create_all(engine):

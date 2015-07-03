@@ -24,6 +24,20 @@ target_metadata = Base.metadata
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
 
+mb_included_tables = [
+    'gender',
+    'language'
+]
+
+def include_object_func(object, name, type_, reflected, compare_to):
+    if type_ == 'table':
+        if object.schema == 'musicbrainz' and name not in mb_included_tables:
+            return False
+        elif object.schema in ['documentation', 'wikidocs',
+                               'cover_art_archive', 'statistics']:
+            return False
+
+    return True
 
 def run_migrations_offline():
     """Run migrations in 'offline' mode.
@@ -39,7 +53,7 @@ def run_migrations_offline():
     """
     url = config.get_main_option("sqlalchemy.url")
     context.configure(url=url, target_metadata=target_metadata,
-                      include_schemas=True)
+                      include_schemas=True, include_object=include_object_func)
 
     with context.begin_transaction():
         context.run_migrations()
@@ -61,7 +75,7 @@ def run_migrations_online():
     context.configure(
         connection=connection,
         target_metadata=target_metadata,
-        include_schemas=True
+        include_schemas=True, include_object=include_object_func
     )
 
     try:

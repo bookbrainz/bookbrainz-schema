@@ -17,6 +17,7 @@
 
 import sqlalchemy.sql as sql
 from bbschema.base import Base
+from bbschema.musicbrainz import Gender, Language
 from sqlalchemy import (Boolean, Column, Date, DateTime, Enum, ForeignKey,
                         Integer, Text, Unicode, UnicodeText)
 from sqlalchemy.dialects.postgresql import UUID
@@ -70,7 +71,7 @@ class User(Base):
     suspended = relationship('SuspendedUser', uselist=False)
     languages = relationship('UserLanguage', backref='user')
     user_type = relationship('UserType')
-    gender = relationship('Gender')
+    gender = relationship(Gender)
 
 
 class InactiveUser(Base):
@@ -106,7 +107,7 @@ class UserLanguage(Base):
         nullable=False
     )
 
-    language = relationship("Language")
+    language = relationship(Language)
 
 
 class Message(Base):

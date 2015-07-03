@@ -20,6 +20,7 @@ base class for all resource models specified in this package."""
 
 import sqlalchemy.sql as sql
 from bbschema.base import Base
+from bbschema.musicbrainz import Language
 from sqlalchemy import (Boolean, Column, DateTime, Enum, ForeignKey, Integer,
                         Unicode, UnicodeText, UniqueConstraint)
 from sqlalchemy.dialects.postgresql import UUID
@@ -196,7 +197,7 @@ class Alias(Base):
 
     primary = Column(Boolean, nullable=False, server_default=text('false'))
 
-    language = relationship('Language')
+    language = relationship(Language)
 
     def copy(self):
         return Alias(name=self.name, sort_name=self.sort_name,
