@@ -588,6 +588,16 @@ class EditionData(EntityData):
     def release(self):
         return format_date(self.release_date, self.release_date_precision)
 
+    pages = Column(Integer)
+
+    # Dimensions, stored as integer millimetre values
+    width = Column(Integer)
+    height = Column(Integer)
+    depth = Column(Integer)
+
+    # Weight in grams
+    weight = Column(Integer)
+
     # TODO: add script ID, when that's replicated from MB
 
     country_id = Column(Integer)
