@@ -70,6 +70,7 @@ WORK_DATA__LANGUAGE = Table(
     schema='bookbrainz'
 )
 
+
 def parse_date_string(date_string):
     if date_string is None:
         return None
@@ -77,7 +78,8 @@ def parse_date_string(date_string):
     parts = date_string.split('-')
     # yyyy-mm-dd
     if len(parts) == 3:
-        return datetime.date(int(parts[0]), int(parts[1]), int(parts[2])), 'DAY'
+        return (datetime.date(int(parts[0]), int(parts[1]), int(parts[2])),
+                'DAY')
     elif len(parts) == 2:
         return datetime.date(int(parts[0]), int(parts[1]), 1), 'MONTH'
     elif len(parts) == 1:
@@ -93,6 +95,23 @@ def format_date(date, precision):
         return '{:02}-{:02}'.format(date.year, date.month)
     else:
         return '{:02}-{:02}-{:02}'.format(date.year, date.month, date.day)
+
+
+def merge_dates(*dates):
+    lowest_precision = dates[0][1]
+    common_date = dates[0][0]
+    for date, precision in dates:
+        if precision == 'MONTH' and lowest_precision == 'DAY':
+            lowest_precision = 'MONTH'
+        elif precision == 'YEAR' and lowest_precision != 'YEAR':
+            lowest_precision = 'YEAR'
+
+        if (format_date(common_date, lowest_precision) !=
+                format_date(date, lowest_precision)):
+            return None
+
+    return parse_date_string(format_date(common_date, lowest_precision))
+
 
 class CreatorCredit(Base):
     __tablename__ = 'creator_credit'
@@ -235,6 +254,54 @@ class EntityData(Base):
 
         return new_data
 
+    @classmethod
+    def merge(cls, data, session, *sources):
+        entity_data = cls()
+
+        # Create a list of duplicated unique aliases on the new entity data
+        all_identifiers = []
+        for s in sources:
+            if s.master_revision.entity_data.identifiers is not None:
+                all_identifiers.extend(
+                    s.master_revision.entity_data.identifiers
+                )
+
+        for identifier in all_identifiers:
+            if entity_data.identifiers is None:
+                entity_data.identifiers = [identifier.copy()]
+            elif identifier not in entity_data.identifiers:
+                entity_data.identifiers.append(identifier.copy())
+
+        all_aliases = []
+        for s in sources:
+            if s.master_revision.entity_data.aliases is not None:
+                all_aliases.extend(s.master_revision.entity_data.aliases)
+
+        for alias in all_aliases:
+            if entity_data.aliases is None:
+                entity_data.aliases = [alias.copy()]
+            elif alias not in entity_data.aliases:
+                entity_data.aliases.append(alias.copy())
+
+        # Set annotation and disambiguation
+        all_annotations = [
+            s.master_revision.entity_data.annotation for s in sources
+            if s.master_revision.entity_data.annotation is not None
+        ]
+        if all_annotations:
+            if all(a == all_annotations[0] for a in all_annotations):
+                entity_data.annotation = all_annotations[0].copy()
+
+        all_disambiguations = [
+            s.master_revision.entity_data.disambiguation for s in sources
+            if s.master_revision.entity_data.disambiguation is not None
+        ]
+        if all_disambiguations:
+            if all(d == all_disambiguations[0] for d in all_disambiguations):
+                entity_data.disambiguation = all_disambiguations[0].copy()
+
+        return entity_data
+
     def copy(self):
         copied_data = type(self)(
             annotation_id=self.annotation_id,
@@ -280,6 +347,22 @@ class PublicationData(EntityData):
             data.get('publication_type', {}).get('publication_type_id')
 
         return new_data
+
+    @classmethod
+    def merge(cls, data, session, *sources):
+        entity_data = super(PublicationData, cls).merge(data, session,
+                                                        *sources)
+
+        # Merge publication type
+        all_pub_types = [
+            s.master_revision.entity_data.publication_type_id for s in sources
+            if s.master_revision.entity_data.publication_type_id is not None
+        ]
+        if all_pub_types:
+            if all(pub_type == all_pub_types[0] for pub_type in all_pub_types):
+                entity_data.publication_type_id = all_pub_types[0]
+
+        entity_data = entity_data.update(data, session)
 
     def update(self, data, session):
         new_data = super(PublicationData, self).update(data, session)
@@ -382,11 +465,64 @@ class CreatorData(EntityData):
 
         new_data.ended = data.get('ended', False)
         new_data.country_id = data.get('country_id')
-        new_data.gender_id = data.get('gender', {}).get('gender_id')
+        new_data.gender_id = data.get(Gender, {}).get('gender_id')
         new_data.creator_type_id =\
             data.get('creator_type', {}).get('creator_type_id')
 
         return new_data
+
+    @classmethod
+    def merge(cls, data, session, *sources):
+        entity_data = super(CreatorData, cls).merge(data, session, *sources)
+
+        # Merge begin and end dates
+        all_begin_dates = [
+            (s.master_revision.entity_data.begin_date,
+             s.master_revision.entity_data.begin_date_precision)
+            for s in sources
+        ]
+
+        entity_data.begin_date, entity_data.begin_data_precision =\
+            merge_dates(all_begin_dates)
+
+        all_end_dates = [
+            (s.master_revision.entity_data.end_date,
+             s.master_revision.entity_data.end_date_precision)
+            for s in sources
+        ]
+
+        entity_data.end_date, entity_data.end_data_precision =\
+            merge_dates(all_end_dates)
+
+        # Merge creator types
+        all_creator_types = [
+            s.master_revision.entity_data.creator_type_id for s in sources
+            if s.master_revision.entity_data.creator_type_id is not None
+        ]
+        if all_creator_types:
+            if all(creator_type == all_creator_types[0]
+                   for creator_type in all_creator_types):
+                entity_data.creator_type_id = all_creator_types[0]
+
+        # Merge genders
+        all_genders = [
+            s.master_revision.entity_data.gender_id for s in sources
+            if s.master_revision.entity_data.gender_id is not None
+        ]
+        if all_genders:
+            if all(gender == all_genders[0] for gender in all_genders):
+                entity_data.gender_id = all_genders[0]
+
+        # Merge countries
+        all_countries = [
+            s.master_revision.entity_data.country_id for s in sources
+            if s.master_revision.entity_data.country_id is not None
+        ]
+        if all_countries:
+            if all(country == all_countries[0] for country in all_countries):
+                entity_data.country_id = all_countries[0]
+
+        entity_data = entity_data.update(data, session)
 
     def update(self, data, session):
         new_data = super(CreatorData, self).update(data, session)
@@ -512,6 +648,50 @@ class PublisherData(EntityData):
             data.get('publisher_type', {}).get('publisher_type_id')
 
         return new_data
+
+    @classmethod
+    def merge(cls, data, session, *sources):
+        entity_data = super(PublisherData, cls).merge(data, session, *sources)
+
+        # Merge begin and end dates
+        all_begin_dates = [
+            (s.master_revision.entity_data.begin_date,
+             s.master_revision.entity_data.begin_date_precision)
+            for s in sources
+        ]
+
+        entity_data.begin_date, entity_data.begin_data_precision =\
+            merge_dates(all_begin_dates)
+
+        all_end_dates = [
+            (s.master_revision.entity_data.end_date,
+             s.master_revision.entity_data.end_date_precision)
+            for s in sources
+        ]
+
+        entity_data.end_date, entity_data.end_data_precision =\
+            merge_dates(all_end_dates)
+
+        # Merge publisher types
+        all_publisher_types = [
+            s.master_revision.entity_data.publisher_type_id for s in sources
+            if s.master_revision.entity_data.publisher_type_id is not None
+        ]
+        if all_publisher_types:
+            if all(publisher_type == all_publisher_types[0]
+                   for publisher_type in all_publisher_types):
+                entity_data.publisher_type_id = all_publisher_types[0]
+
+        # Merge countries
+        all_countries = [
+            s.master_revision.entity_data.country_id for s in sources
+            if s.master_revision.entity_data.country_id is not None
+        ]
+        if all_countries:
+            if all(country == all_countries[0] for country in all_countries):
+                entity_data.country_id = all_countries[0]
+
+        entity_data = entity_data.update(data, session)
 
     def update(self, data, session):
         new_data = super(PublisherData, self).update(data, session)
@@ -640,39 +820,121 @@ class EditionData(EntityData):
 
     @classmethod
     def create(cls, data, session):
-        new_data = super(EditionData, cls).create(data, session)
+        entity_data = super(EditionData, cls).create(data, session)
 
         publication_gid = data.get('publication')
         if publication_gid is None:
             return None
 
-        publication =\
-            session.query(Publication).filter_by(entity_gid=publication_gid).one()
-        new_data.publication = publication
+        publication = session.query(Publication).\
+            filter_by(entity_gid=publication_gid).one()
+        entity_data.publication = publication
 
         #new_data.creator_credit =\
         #    CreatorCredit.create(data.get('creator_credit'), session)
         parsed_date_info = parse_date_string(data.get('release_date'))
         if parsed_date_info is not None:
-            new_data.release_date = parsed_date_info[0]
-            new_data.release_date_precision = parsed_date_info[1]
+            entity_data.release_date = parsed_date_info[0]
+            entity_data.release_date_precision = parsed_date_info[1]
 
-        new_data.country_id = data.get('country_id')
-        new_data.language_id =\
+        entity_data.country_id = data.get('country_id')
+        entity_data.language_id =\
             data.get('language', {}).get('language_id')
-        new_data.edition_format_id =\
+        entity_data.edition_format_id =\
             data.get('edition_format', {}).get('edition_format_id')
-        new_data.edition_status_id =\
+        entity_data.edition_status_id =\
             data.get('edition_status', {}).get('edition_status_id')
 
         publisher_gid = data.get('publisher')
         if publisher_gid is not None:
-            publisher =\
-                session.query(Publisher).filter_by(entity_gid=publisher_gid).one()
+            publisher = session.query(Publisher).\
+                filter_by(entity_gid=publisher_gid).one()
 
-            new_data.publisher = publisher
+            entity_data.publisher = publisher
 
-        return new_data
+        return entity_data
+
+    @classmethod
+    def merge(cls, data, session, *sources):
+        entity_data = super(PublisherData, cls).merge(data, session, *sources)
+
+        # Merge publications
+        all_publications = [
+            s.master_revision.entity_data.publication_gid for s in sources
+            if s.master_revision.entity_data.publication_gid is not None
+        ]
+        if all_publications:
+            if all(pub == all_publications[0] for pub in all_publications):
+                entity_data.publication_gid = all_publications[0]
+
+        # Merge creator credits
+        all_credits = [
+            s.master_revision.entity_data.creator_credit_id for s in sources
+            if s.master_revision.entity_data.creator_credit_id is not None
+        ]
+        if all_credits:
+            if all(credit == all_credits[0] for credit in all_credits):
+                entity_data.creator_credit_id = all_credits[0]
+
+        # Merge release dates
+        all_release_dates = [
+            (s.master_revision.entity_data.release_date,
+             s.master_revision.entity_data.release_date_precision)
+            for s in sources
+        ]
+
+        entity_data.release_date, entity_data.release_date_precision =\
+            merge_dates(all_release_dates)
+
+        # Merge countries
+        all_countries = [
+            s.master_revision.entity_data.country_id for s in sources
+            if s.master_revision.entity_data.country_id is not None
+        ]
+        if all_countries:
+            if all(country == all_countries[0] for country in all_countries):
+                entity_data.country_id = all_countries[0]
+
+        # Merge languages
+        all_languages = [
+            s.master_revision.entity_data.language_id for s in sources
+            if s.master_revision.entity_data.language_id is not None
+        ]
+        if all_languages:
+            if all(language == all_languages[0] for language in all_languages):
+                entity_data.language_id = all_languages[0]
+
+        # Merge formats
+        all_formats = [
+            s.master_revision.entity_data.edition_format_id for s in sources
+            if s.master_revision.entity_data.edition_format_id is not None
+        ]
+        if all_formats:
+            if all(format_ == all_formats[0] for format_ in all_formats):
+                entity_data.edition_format_id = all_formats[0]
+
+        # Merge statuses
+        all_statuses = [
+            s.master_revision.entity_data.edition_status_id for s in sources
+            if s.master_revision.entity_data.edition_status_id is not None
+        ]
+        if all(status == all_statuses[0] for status in all_statuses):
+            entity_data.edition_status_id = all_statuses[0]
+
+        # Merge publishers
+        all_publishers = [
+            s.master_revision.entity_data.publisher_gid for s in sources
+            if s.master_revision.entity_data.publisher_gid is not None
+        ]
+        if all_publishers:
+            if all(publisher == all_publishers[0]
+                   for publisher in all_publishers):
+                entity_data.publisher_gid = all_publishers[0]
+
+        entity_data = entity_data.update(data, session)
+
+        if entity_data.publication_gid is None:
+            raise ValueError('Merge conflict in publication_gid not resolved.')
 
     def update(self, data, session):
         new_data = super(EditionData, self).update(data, session)
@@ -798,9 +1060,11 @@ class WorkData(EntityData):
 
         if 'languages' in data:
             languages = data['languages']
-            removed_language_ids = [old for old, new in languages if new is None]
+            removed_language_ids = [old for old, new in languages
+                                    if new is None]
             added_language_ids = [new for old, new in languages if old is None]
-            new_data.languages = [x for x in new_data.languages if x.language_id not in removed_language_ids]
+            new_data.languages = [x for x in new_data.languages
+                                  if x.language_id not in removed_language_ids]
 
             for language_id in added_language_ids:
                 language = session.query(Language).get(language_id)
@@ -811,6 +1075,35 @@ class WorkData(EntityData):
             return self
         else:
             return new_data
+
+    @classmethod
+    def merge(cls, data, session, *sources):
+        entity_data = super(WorkData, cls).merge(data, session, *sources)
+
+        # Merge work types
+        all_work_types = [
+            s.master_revision.entity_data.work_type_id for s in sources
+            if s.master_revision.entity_data.work_type_id is not None
+        ]
+        if all_work_types:
+            if all(work_type == all_work_types[0]
+                   for work_type in all_work_types):
+                entity_data.work_type_id = all_work_types[0]
+
+        # Merge languages
+        all_languages = []
+        for s in sources:
+            if s.master_revision.entity_data.languages is not None:
+                all_languages.extend(s.master_revision.entity_data.languages)
+
+        # Create a list of unique languages on the new entity data
+        for language in all_languages:
+            if entity_data.languages is None:
+                entity_data.languages = [language]
+            elif language not in entity_data.languages:
+                entity_data.languages.append(language)
+
+        entity_data = entity_data.update(data, session)
 
     def copy(self):
         copied_data = super(WorkData, self).copy()

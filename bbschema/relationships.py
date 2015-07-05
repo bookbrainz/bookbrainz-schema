@@ -74,6 +74,15 @@ class RelationshipData(Base):
 
     relationship_type = relationship('RelationshipType')
 
+    def copy(self):
+        copied_data = type(self)(
+            relationship_type_id=self.relationship_type_id
+        )
+        copied_data.entities = [e.copy() for e in self.entities]
+        copied_data.texts = [t.copy() for t in self.texts]
+
+        return copied_data
+
     @classmethod
     def create(cls, data):
         result = cls()
@@ -107,6 +116,31 @@ class RelationshipData(Base):
 
         return result
 
+    def __eq__(self, other):
+        # First, check that the relationship types are equal.
+        if self.relationship_type_id != other.relationship_type_id:
+            return False
+
+        # Now check that entities are identical
+        for a in self.entities:
+            if a not in other.entities:
+                return False
+
+        for b in other.entities:
+            if b not in self.entities:
+                return False
+
+        # And finally that texts are identical
+        for a in self.texts:
+            if a not in other.texts:
+                return False
+
+        for b in other.texts:
+            if b not in self.texts:
+                return False
+
+        return True
+
 
 class RelationshipEntity(Base):
     __tablename__ = 'rel_entity'
@@ -123,7 +157,22 @@ class RelationshipEntity(Base):
         nullable=False
     )
 
-    entity = relationship('Entity')
+    entity = relationship('Entity', backref='relationships')
+
+    def __eq__(self, other):
+        if self.position != other.position:
+            return False
+
+        if self.entity_gid != other.entity_gid:
+            return False
+
+        return True
+
+    def copy(self):
+        return type(self)(
+            position=self.position,
+            entity_gid=self.entity_gid
+        )
 
 
 class RelationshipText(Base):
@@ -137,3 +186,18 @@ class RelationshipText(Base):
     position = Column(SmallInteger, primary_key=True)
 
     text = Column(UnicodeText, nullable=False)
+
+    def __eq__(self, other):
+        if self.position != other.position:
+            return False
+
+        if self.text != other.text:
+            return False
+
+        return True
+
+    def copy(self):
+        return type(self)(
+            position=self.position,
+            text=self.text
+        )

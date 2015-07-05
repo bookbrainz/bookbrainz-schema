@@ -93,18 +93,16 @@ class EntityRevision(Revision):
         nullable=False
     )
     entity_data_id = Column(
-        Integer, ForeignKey('bookbrainz.entity_data.entity_data_id'),
-        nullable=False
+        Integer, ForeignKey('bookbrainz.entity_data.entity_data_id')
     )
 
-    entity = relationship('Entity', foreign_keys=[entity_gid])
-    entity_data = relationship('EntityData', backref='revisions')
+    entity = relationship('Entity', foreign_keys=[entity_gid],
+                          backref='revisions')
+    entity_data = relationship('EntityData')
 
     __mapper_args__ = {
         'polymorphic_identity': 1,
     }
-
-
 
 
 class RelationshipRevision(Revision):
