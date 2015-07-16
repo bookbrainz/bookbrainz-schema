@@ -1,3 +1,4 @@
 sqlalchemy
 psycopg2
 git+https://bitbucket.org/lalinsky/mbdata.git@v2015.06.20
+click
