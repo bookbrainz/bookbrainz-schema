@@ -89,21 +89,26 @@ def parse_date_string(date_string):
 
 
 def format_date(date, precision):
-    if precision == 'YEAR':
-        return '{:02}'.format(date.year)
+    if precision == 'DAY':
+        return '{:02}-{:02}-{:02}'.format(date.year, date.month, date.day)
     elif precision == 'MONTH':
         return '{:02}-{:02}'.format(date.year, date.month)
     else:
-        return '{:02}-{:02}-{:02}'.format(date.year, date.month, date.day)
+        return '{:02}'.format(date.year)
 
 
-def merge_dates(*dates):
-    lowest_precision = dates[0][1]
+def merge_dates(dates):
+    dates = [(date, precision) for date, precision in dates
+             if date is not None]
+    if not dates:
+        return None
+
+    lowest_precision = dates[0][1] if dates[0][1] is not None else 'YEAR'
     common_date = dates[0][0]
     for date, precision in dates:
         if precision == 'MONTH' and lowest_precision == 'DAY':
             lowest_precision = 'MONTH'
-        elif precision == 'YEAR' and lowest_precision != 'YEAR':
+        elif precision in ['YEAR', None]:
             lowest_precision = 'YEAR'
 
         if (format_date(common_date, lowest_precision) !=
@@ -300,6 +305,11 @@ class EntityData(Base):
             if all(d == all_disambiguations[0] for d in all_disambiguations):
                 entity_data.disambiguation = all_disambiguations[0].copy()
 
+        entity_data = entity_data.update(data, session)
+
+        if entity_data.default_alias is None:
+            raise ValueError('Default alias not selected for merged entity!')
+
         return entity_data
 
     def copy(self):
@@ -362,7 +372,7 @@ class PublicationData(EntityData):
             if all(pub_type == all_pub_types[0] for pub_type in all_pub_types):
                 entity_data.publication_type_id = all_pub_types[0]
 
-        entity_data = entity_data.update(data, session)
+        return entity_data.update(data, session)
 
     def update(self, data, session):
         new_data = super(PublicationData, self).update(data, session)
@@ -465,7 +475,7 @@ class CreatorData(EntityData):
 
         new_data.ended = data.get('ended', False)
         new_data.country_id = data.get('country_id')
-        new_data.gender_id = data.get(Gender, {}).get('gender_id')
+        new_data.gender_id = data.get('gender', {}).get('gender_id')
         new_data.creator_type_id =\
             data.get('creator_type', {}).get('creator_type_id')
 
@@ -482,8 +492,10 @@ class CreatorData(EntityData):
             for s in sources
         ]
 
-        entity_data.begin_date, entity_data.begin_data_precision =\
-            merge_dates(all_begin_dates)
+        parsed_date_info = merge_dates(all_begin_dates)
+        if parsed_date_info is not None:
+            entity_data.begin_date = parsed_date_info[0]
+            entity_data.begin_data_precision = parsed_date_info[1]
 
         all_end_dates = [
             (s.master_revision.entity_data.end_date,
@@ -491,8 +503,14 @@ class CreatorData(EntityData):
             for s in sources
         ]
 
-        entity_data.end_date, entity_data.end_data_precision =\
-            merge_dates(all_end_dates)
+        parsed_date_info = merge_dates(all_end_dates)
+        if parsed_date_info is not None:
+            entity_data.end_date = parsed_date_info[0]
+            entity_data.end_data_precision = parsed_date_info[1]
+
+        all_ended = all(s.master_revision.entity_data.ended for s in sources)
+        if (entity_data.end_date is not None) or all_ended:
+            entity_data.ended = True
 
         # Merge creator types
         all_creator_types = [
@@ -522,7 +540,7 @@ class CreatorData(EntityData):
             if all(country == all_countries[0] for country in all_countries):
                 entity_data.country_id = all_countries[0]
 
-        entity_data = entity_data.update(data, session)
+        return entity_data.update(data, session)
 
     def update(self, data, session):
         new_data = super(CreatorData, self).update(data, session)
@@ -660,8 +678,10 @@ class PublisherData(EntityData):
             for s in sources
         ]
 
-        entity_data.begin_date, entity_data.begin_data_precision =\
-            merge_dates(all_begin_dates)
+        parsed_date_info = merge_dates(all_begin_dates)
+        if parsed_date_info is not None:
+            entity_data.begin_date = parsed_date_info[0]
+            entity_data.begin_data_precision = parsed_date_info[1]
 
         all_end_dates = [
             (s.master_revision.entity_data.end_date,
@@ -669,8 +689,14 @@ class PublisherData(EntityData):
             for s in sources
         ]
 
-        entity_data.end_date, entity_data.end_data_precision =\
-            merge_dates(all_end_dates)
+        parsed_date_info = merge_dates(all_end_dates)
+        if parsed_date_info is not None:
+            entity_data.end_date = parsed_date_info[0]
+            entity_data.end_data_precision = parsed_date_info[1]
+
+        all_ended = all(s.master_revision.entity_data.ended for s in sources)
+        if (entity_data.end_date is not None) or all_ended:
+            entity_data.ended = True
 
         # Merge publisher types
         all_publisher_types = [
@@ -691,7 +717,7 @@ class PublisherData(EntityData):
             if all(country == all_countries[0] for country in all_countries):
                 entity_data.country_id = all_countries[0]
 
-        entity_data = entity_data.update(data, session)
+        return entity_data.update(data, session)
 
     def update(self, data, session):
         new_data = super(PublisherData, self).update(data, session)
@@ -820,39 +846,37 @@ class EditionData(EntityData):
 
     @classmethod
     def create(cls, data, session):
-        entity_data = super(EditionData, cls).create(data, session)
+        new_data = super(EditionData, cls).create(data, session)
 
         publication_gid = data.get('publication')
         if publication_gid is None:
             return None
 
-        publication = session.query(Publication).\
-            filter_by(entity_gid=publication_gid).one()
-        entity_data.publication = publication
+        publication =\
+            session.query(Publication).filter_by(entity_gid=publication_gid).one()
+        new_data.publication = publication
 
         #new_data.creator_credit =\
         #    CreatorCredit.create(data.get('creator_credit'), session)
         parsed_date_info = parse_date_string(data.get('release_date'))
         if parsed_date_info is not None:
-            entity_data.release_date = parsed_date_info[0]
-            entity_data.release_date_precision = parsed_date_info[1]
+            new_data.release_date = parsed_date_info[0]
+            new_data.release_date_precision = parsed_date_info[1]
 
-        entity_data.country_id = data.get('country_id')
-        entity_data.language_id =\
+        new_data.country_id = data.get('country_id')
+        new_data.language_id =\
             data.get('language', {}).get('language_id')
-        entity_data.edition_format_id =\
+        new_data.edition_format_id =\
             data.get('edition_format', {}).get('edition_format_id')
-        entity_data.edition_status_id =\
+        new_data.edition_status_id =\
             data.get('edition_status', {}).get('edition_status_id')
 
         publisher_gid = data.get('publisher')
         if publisher_gid is not None:
-            publisher = session.query(Publisher).\
-                filter_by(entity_gid=publisher_gid).one()
+            publisher =\
+                session.query(Publisher).filter_by(entity_gid=publisher_gid).one()
 
-            entity_data.publisher = publisher
-
-        return entity_data
+            new_data.publisher = publisher
 
     @classmethod
     def merge(cls, data, session, *sources):
@@ -883,8 +907,10 @@ class EditionData(EntityData):
             for s in sources
         ]
 
-        entity_data.release_date, entity_data.release_date_precision =\
-            merge_dates(all_release_dates)
+        parsed_date_info = merge_dates(all_release_dates)
+        if parsed_date_info is not None:
+            entity_data.release_date = parsed_date_info[0]
+            entity_data.release_date_precision = parsed_date_info[1]
 
         # Merge countries
         all_countries = [
@@ -935,6 +961,8 @@ class EditionData(EntityData):
 
         if entity_data.publication_gid is None:
             raise ValueError('Merge conflict in publication_gid not resolved.')
+
+        return entity_data
 
     def update(self, data, session):
         new_data = super(EditionData, self).update(data, session)
@@ -1060,11 +1088,9 @@ class WorkData(EntityData):
 
         if 'languages' in data:
             languages = data['languages']
-            removed_language_ids = [old for old, new in languages
-                                    if new is None]
+            removed_language_ids = [old for old, new in languages if new is None]
             added_language_ids = [new for old, new in languages if old is None]
-            new_data.languages = [x for x in new_data.languages
-                                  if x.language_id not in removed_language_ids]
+            new_data.languages = [x for x in new_data.languages if x.language_id not in removed_language_ids]
 
             for language_id in added_language_ids:
                 language = session.query(Language).get(language_id)
@@ -1103,7 +1129,7 @@ class WorkData(EntityData):
             elif language not in entity_data.languages:
                 entity_data.languages.append(language)
 
-        entity_data = entity_data.update(data, session)
+        return entity_data.update(data, session)
 
     def copy(self):
         copied_data = super(WorkData, self).copy()

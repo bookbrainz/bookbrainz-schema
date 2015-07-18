@@ -366,7 +366,7 @@ def create_identifiers(revision_json):
 def update_identifiers(identifiers, revision_json):
     if (('identifiers' not in revision_json) or
             (revision_json['identifiers'] is None)):
-        return (identifiers, None)
+        return identifiers
 
     # Create a dictionary, to make it easier look up aliases by ID
     identifier_dict = dict((identifier.identifier_id, identifier)

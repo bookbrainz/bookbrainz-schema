@@ -10,4 +10,5 @@ def create_all(hostname, port, username, password, db_name):
         'postgresql://{}:{}@{}/{}'.format(username, password, hostname,
                                           db_name)
     engine = create_engine(connection_string, echo=True)
-    Base.metadata.create_all(engine)
+    tables = [t for t in Base.metadata.tables.values() if t.schema == 'bookbrainz' or (t.schema == 'musicbrainz' and t.name in ['gender', 'language'])]
+    Base.metadata.create_all(engine, tables=tables)
