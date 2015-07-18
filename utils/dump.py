@@ -20,9 +20,14 @@
 from the database to files, and optionally compressing those files.
 """
 
-from __future__ import print_function
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 
+import datetime
 import os
+import shutil
+import tarfile
+import tempfile
 
 import click
 import psycopg2
@@ -116,17 +121,35 @@ TEMPORARIES = [
 @click.command()
 @click.argument('username')
 @click.argument('database')
-@click.option('--password', prompt=True, hide_input=True)
-@click.option('--host', default='localhost')
-@click.option('--port', default=5432)
-@click.option('--compress/--no-compress', default=False)
-@click.option('--output-dir', default='.')
-@click.option('--tmp-dir', default='/tmp')
-@click.option('--keep-files/--delete-files', default=False)
+@click.option('--password', prompt=True, hide_input=True,
+              help=('the password for the specified PostgreSQL user, prompted'
+                    ' for if not provided in the command line'))
+@click.option('--host', default='localhost',
+              help='the hostname for the instance of PostgreSQL to connect to')
+@click.option('--port', default=5432,
+              help='the port for the instance of PostgreSQL to connect to')
+@click.option('--compress/--no-compress', default=True,
+              help="[don't] create .tar.bz2 archives after exporting")
+@click.option('--output-dir', default='.',
+              help='place the final archive files in DIR (default: ".")')
+@click.option('--tmp-dir', default=None,
+              help='use DIR for temporary storage (default: /tmp)')
+@click.option('--keep-files/--delete-files', default=False,
+              help="don't delete the exported files from the tmp directory")
 def dump(username, database, password, **kwargs):
-    """ Dumps the bookbrainz data from the specified database into files. """
-    compress = kwargs['compress']
+    """ Dumps the bookbrainz data from the specified database into files. The
+    user must provide the PostgreSQL USERNAME and PostgreSQL DATABASE to use,
+    and will be prompted for a password.
+    """
+
+    start_time = datetime.datetime.now()
     output_dir = os.path.abspath(kwargs['output_dir'])
+    temp_dir = (None if kwargs['tmp_dir'] is None
+                else os.path.abspath(kwargs['tmp_dir']))
+
+    temp_output_dir = tempfile.mkdtemp(prefix='bbexport', dir=temp_dir)
+
+    num_tables = 0
 
     with psycopg2.connect(database=database, user=username, password=password,
                           host=kwargs['host'], port=kwargs['port']) as conn:
@@ -137,22 +160,48 @@ def dump(username, database, password, **kwargs):
             create_temporaries(curs)
             for group in GROUPS.keys():
                 print("Dumping Group {}...".format(group))
-                dump_group(curs, output_dir, group)
+                schemas = GROUPS[group]
+                for schema, tables in schemas:
+                    for table in tables:
+                        dump_table(curs, temp_output_dir, schema, table)
+                        num_tables += 1
+
+    if kwargs['compress']:
+        for group in GROUPS.keys():
+            compress_group(temp_output_dir, group, GROUPS[group], output_dir)
+
+    if not kwargs['keep_files']:
+        shutil.rmtree(temp_output_dir)
+
+    end_time = datetime.datetime.now()
+    print("Exported {} tables in {}".format(num_tables, end_time - start_time))
+
+
+def compress_group(source_dir, group_name, group_tables, dest_dir):
+    """ Compresses a particular group of table files into a single bzipped tar
+    file for the group, containing the exported table files.
+    """
+
+    dest_file = os.path.join(dest_dir, 'bbdump-' + group_name + '.tar.bz2')
+    output_file = tarfile.open(dest_file, 'w:bz2')
+
+    for _, tables in group_tables:
+        for table in tables:
+            output_file.add(os.path.join(source_dir, table))
+
+    output_file.close()
 
 
 def create_temporaries(cursor):
+    """ Creates temporary tables in the database from a list of provided SQL
+    queries.
+    """
     for temporary in TEMPORARIES:
         cursor.execute(temporary)
 
 
-def dump_group(cursor, output_dir, group):
-    schemas = GROUPS[group]
-    for schema, tables in schemas:
-        for table in tables:
-            dump_table(cursor, output_dir, schema, table)
-
-
 def dump_table(cursor, output_dir, schema, table):
+    """ Dumps a particular table to the provided output directory. """
     qualified_name = (schema + '.' + table) if schema is not None else table
     print("\tDumping Table {}...".format(qualified_name))
     with open(os.path.join(output_dir, table), 'wb') as f:
