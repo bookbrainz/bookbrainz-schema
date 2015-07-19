@@ -54,11 +54,12 @@ class User(Base):
                        server_default=text("(now() AT TIME ZONE 'UTC')"))
 
     user_type_id = Column(
-        Integer, ForeignKey('bookbrainz.user_type.user_type_id'),
-        nullable=False
+        Integer, ForeignKey('bookbrainz.user_type.user_type_id',
+                            deferrable=True), nullable=False
     )
 
-    gender_id = Column(Integer, ForeignKey('musicbrainz.gender.id'))
+    gender_id = Column(Integer, ForeignKey('musicbrainz.gender.id',
+                                           deferrable=True))
     country_id = Column(Integer)
 
     total_revisions = Column(Integer, nullable=False, server_default=text('0'))
@@ -78,16 +79,16 @@ class InactiveUser(Base):
     __tablename__ = 'inactive_users'
     __table_args__ = {'schema': 'bookbrainz'}
 
-    user_id = Column(Integer, ForeignKey('bookbrainz.user.user_id'),
-                     primary_key=True)
+    user_id = Column(Integer, ForeignKey('bookbrainz.user.user_id',
+                                         deferrable=True), primary_key=True)
 
 
 class SuspendedUser(Base):
     __tablename__ = 'suspended_users'
     __table_args__ = {'schema': 'bookbrainz'}
 
-    user_id = Column(Integer, ForeignKey('bookbrainz.user.user_id'),
-                     primary_key=True)
+    user_id = Column(Integer, ForeignKey('bookbrainz.user.user_id',
+                                         deferrable=True), primary_key=True)
 
     reason = Column(UnicodeText, nullable=False)
 
@@ -96,10 +97,12 @@ class UserLanguage(Base):
     __tablename__ = 'user_language'
     __table_args__ = {'schema': 'bookbrainz'}
 
-    user_id = Column(Integer, ForeignKey('bookbrainz.user.user_id'),
-                     primary_key=True)
-    language_id = Column(Integer, ForeignKey('musicbrainz.language.id'),
-                         primary_key=True)
+    user_id = Column(Integer, ForeignKey('bookbrainz.user.user_id',
+                                         deferrable=True), primary_key=True)
+    language_id = Column(
+        Integer, ForeignKey('musicbrainz.language.id', deferrable=True),
+        primary_key=True
+    )
 
     proficiency = Column(
         Enum('BASIC', 'INTERMEDIATE', 'ADVANCED', 'NATIVE',
@@ -116,8 +119,8 @@ class Message(Base):
 
     message_id = Column(Integer, primary_key=True)
 
-    sender_id = Column(Integer, ForeignKey('bookbrainz.user.user_id'),
-                       nullable=True)
+    sender_id = Column(Integer, ForeignKey('bookbrainz.user.user_id',
+                                           deferrable=True), nullable=True)
 
     subject = Column(Unicode(255), nullable=False)
     content = Column(UnicodeText, nullable=False)
@@ -130,10 +133,12 @@ class MessageReceipt(Base):
     __tablename__ = 'message_receipt'
     __table_args__ = {'schema': 'bookbrainz'}
 
-    message_id = Column(Integer, ForeignKey('bookbrainz.message.message_id'),
-                        primary_key=True)
-    recipient_id = Column(Integer, ForeignKey('bookbrainz.user.user_id'),
-                          primary_key=True)
+    message_id = Column(Integer, ForeignKey('bookbrainz.message.message_id',
+                                            deferrable=True), primary_key=True)
+    recipient_id = Column(
+        Integer, ForeignKey('bookbrainz.user.user_id', deferrable=True),
+        primary_key=True
+    )
 
     archived = Column(Boolean, nullable=False, default=False)
 
@@ -158,8 +163,8 @@ class OAuthClient(Base):
     _default_scopes = Column(UnicodeText, nullable=False, server_default='')
 
     # creator of the client, not required
-    owner_id = Column(Integer, ForeignKey('bookbrainz.user.user_id'),
-                      nullable=False)
+    owner_id = Column(Integer, ForeignKey('bookbrainz.user.user_id',
+                                          deferrable=True), nullable=False)
 
     @property
     def client_type(self):

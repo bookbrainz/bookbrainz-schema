@@ -40,8 +40,10 @@ class Entity(Base):
     last_updated = Column(DateTime, nullable=False,
                           server_default=text("(now() AT TIME ZONE 'UTC')"))
     master_revision_id = Column(
-        Integer, ForeignKey('bookbrainz.entity_revision.revision_id',
-                            use_alter=True, name='fk_master_revision_id')
+        Integer, ForeignKey(
+            'bookbrainz.entity_revision.revision_id', use_alter=True,
+            name='fk_master_revision_id', deferrable=True
+        )
     )
     _type = Column(
         Enum(
@@ -104,7 +106,8 @@ class EntityRedirect(Base):
 
     source_gid = Column(UUID(as_uuid=True), primary_key=True)
     target_gid = Column(
-        UUID(as_uuid=True), ForeignKey('bookbrainz.entity.entity_gid'),
+        UUID(as_uuid=True), ForeignKey('bookbrainz.entity.entity_gid',
+                                       deferrable=True),
         nullable=False
     )
 
@@ -193,7 +196,8 @@ class Alias(Base):
     name = Column(UnicodeText, nullable=False)
     sort_name = Column(UnicodeText, nullable=False)
 
-    language_id = Column(Integer, ForeignKey('musicbrainz.language.id'))
+    language_id = Column(Integer, ForeignKey('musicbrainz.language.id',
+                                             deferrable=True))
 
     primary = Column(Boolean, nullable=False, server_default=text('false'))
 
@@ -239,7 +243,8 @@ class Identifier(Base):
 
     identifier_id = Column(Integer, primary_key=True)
     identifier_type_id = Column(
-        Integer, ForeignKey('bookbrainz.identifier_type.identifier_type_id'),
+        Integer, ForeignKey('bookbrainz.identifier_type.identifier_type_id',
+                            deferrable=True),
         nullable=False
     )
 
@@ -298,7 +303,8 @@ class IdentifierType(Base):
     validation_regex = Column(UnicodeText, nullable=False)
 
     parent_id = Column(
-        Integer, ForeignKey('bookbrainz.identifier_type.identifier_type_id')
+        Integer, ForeignKey('bookbrainz.identifier_type.identifier_type_id',
+                            deferrable=True)
     )
 
     child_order = Column(Integer, nullable=False, server_default=text('0'))

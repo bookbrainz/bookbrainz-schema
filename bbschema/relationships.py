@@ -32,8 +32,10 @@ class Relationship(Base):
 
     last_updated = Column(DateTime, nullable=False,
                           server_default=text("(now() AT TIME ZONE 'UTC')"))
-    master_revision_id = Column(Integer,
-                                ForeignKey('bookbrainz.revision.revision_id'))
+    master_revision_id = Column(
+        Integer, ForeignKey('bookbrainz.revision.revision_id',
+                            deferrable=True)
+    )
 
     master_revision = relationship(
         'RelationshipRevision', foreign_keys=[master_revision_id],
@@ -48,8 +50,11 @@ class RelationshipType(Base):
     relationship_type_id = Column(Integer, primary_key=True)
     label = Column(Unicode(255), nullable=False, unique=True)
 
-    parent_id = Column(Integer,
-                       ForeignKey('bookbrainz.rel_type.relationship_type_id'))
+    parent_id = Column(
+        Integer, ForeignKey('bookbrainz.rel_type.relationship_type_id',
+                            deferrable=True)
+    )
+
     child_order = Column(Integer, nullable=False, server_default=text('0'))
 
     description = Column(UnicodeText, nullable=False)
@@ -65,8 +70,8 @@ class RelationshipData(Base):
     relationship_data_id = Column(Integer, primary_key=True)
 
     relationship_type_id = Column(
-        Integer, ForeignKey('bookbrainz.rel_type.relationship_type_id'),
-        nullable=False
+        Integer, ForeignKey('bookbrainz.rel_type.relationship_type_id',
+                            deferrable=True), nullable=False
     )
 
     entities = relationship('RelationshipEntity', backref='relationship_data')
@@ -113,14 +118,14 @@ class RelationshipEntity(Base):
     __table_args__ = {'schema': 'bookbrainz'}
 
     relationship_data_id = Column(
-        Integer, ForeignKey('bookbrainz.rel_data.relationship_data_id'),
-        primary_key=True
+        Integer, ForeignKey('bookbrainz.rel_data.relationship_data_id',
+                            deferrable=True), primary_key=True
     )
     position = Column(SmallInteger, primary_key=True)
 
     entity_gid = Column(
-        UUID(as_uuid=True), ForeignKey('bookbrainz.entity.entity_gid'),
-        nullable=False
+        UUID(as_uuid=True), ForeignKey('bookbrainz.entity.entity_gid',
+                                       deferrable=True), nullable=False
     )
 
     entity = relationship('Entity')
@@ -131,8 +136,8 @@ class RelationshipText(Base):
     __table_args__ = {'schema': 'bookbrainz'}
 
     relationship_data_id = Column(
-        Integer, ForeignKey('bookbrainz.rel_data.relationship_data_id'),
-        primary_key=True
+        Integer, ForeignKey('bookbrainz.rel_data.relationship_data_id',
+                            deferrable=True), primary_key=True
     )
     position = Column(SmallInteger, primary_key=True)
 

@@ -35,10 +35,11 @@ class RevisionNote(Base):
 
     revision_note_id = Column(Integer, primary_key=True)
 
-    user_id = Column(Integer, ForeignKey('bookbrainz.user.user_id'),
-                     nullable=False)
+    user_id = Column(Integer, ForeignKey('bookbrainz.user.user_id',
+                                         deferrable=True), nullable=False)
     revision_id = Column(
-        Integer, ForeignKey('bookbrainz.revision.revision_id'), nullable=False
+        Integer, ForeignKey('bookbrainz.revision.revision_id',
+                            deferrable=True), nullable=False
     )
     content = Column(UnicodeText, nullable=False)
     posted_at = Column(DateTime, nullable=False,
@@ -53,12 +54,13 @@ class Revision(Base):
 
     revision_id = Column(Integer, primary_key=True)
 
-    user_id = Column(Integer, ForeignKey('bookbrainz.user.user_id'),
-                     nullable=False)
+    user_id = Column(Integer, ForeignKey('bookbrainz.user.user_id',
+                                         deferrable=True), nullable=False)
     created_at = Column(DateTime, nullable=False,
                         server_default=text("(now() AT TIME ZONE 'UTC')"))
 
-    parent_id = Column(Integer, ForeignKey('bookbrainz.revision.revision_id'))
+    parent_id = Column(Integer, ForeignKey('bookbrainz.revision.revision_id',
+                                           deferrable=True))
 
     note = sqlalchemy.orm.column_property(
         select([RevisionNote.content]).where(
@@ -84,17 +86,17 @@ class EntityRevision(Revision):
     __table_args__ = {'schema': 'bookbrainz'}
 
     revision_id = Column(
-        Integer, ForeignKey('bookbrainz.revision.revision_id'),
-        primary_key=True
+        Integer, ForeignKey('bookbrainz.revision.revision_id',
+                            deferrable=True), primary_key=True
     )
 
     entity_gid = Column(
-        UUID(as_uuid=True), ForeignKey('bookbrainz.entity.entity_gid'),
-        nullable=False
+        UUID(as_uuid=True), ForeignKey('bookbrainz.entity.entity_gid',
+                                       deferrable=True), nullable=False
     )
     entity_data_id = Column(
-        Integer, ForeignKey('bookbrainz.entity_data.entity_data_id'),
-        nullable=False
+        Integer, ForeignKey('bookbrainz.entity_data.entity_data_id',
+                            deferrable=True), nullable=False
     )
 
     entity = relationship('Entity', foreign_keys=[entity_gid])
@@ -112,17 +114,17 @@ class RelationshipRevision(Revision):
     __table_args__ = {'schema': 'bookbrainz'}
 
     revision_id = Column(
-        Integer, ForeignKey('bookbrainz.revision.revision_id'),
-        primary_key=True
+        Integer, ForeignKey('bookbrainz.revision.revision_id',
+                            deferrable=True), primary_key=True
     )
 
     relationship_id = Column(
-        Integer, ForeignKey('bookbrainz.rel.relationship_id'),
+        Integer, ForeignKey('bookbrainz.rel.relationship_id', deferrable=True),
         nullable=False
     )
     relationship_data_id = Column(
-        Integer, ForeignKey('bookbrainz.rel_data.relationship_data_id'),
-        nullable=False
+        Integer, ForeignKey('bookbrainz.rel_data.relationship_data_id',
+                            deferrable=True), nullable=False
     )
 
     relationship = sqlalchemy.orm.relationship('Relationship',

@@ -35,9 +35,11 @@ ENTITY_DATA__ALIAS = Table(
     'entity_data__alias', Base.metadata,
     Column(
         'entity_data_id', Integer,
-        ForeignKey('bookbrainz.entity_data.entity_data_id'), primary_key=True
+        ForeignKey('bookbrainz.entity_data.entity_data_id',
+                   deferrable=True), primary_key=True
     ),
-    Column('alias_id', Integer, ForeignKey('bookbrainz.alias.alias_id'),
+    Column('alias_id', Integer, ForeignKey('bookbrainz.alias.alias_id',
+                                           deferrable=True),
            primary_key=True),
     schema='bookbrainz'
 )
@@ -46,12 +48,14 @@ ENTITY_DATA__IDENTIFIER = Table(
     'entity_data__identifier', Base.metadata,
     Column(
         'entity_data_id', Integer,
-        ForeignKey('bookbrainz.entity_data.entity_data_id'), primary_key=True,
+        ForeignKey('bookbrainz.entity_data.entity_data_id',
+                   deferrable=True), primary_key=True,
         nullable=False
     ),
     Column(
         'identifier_id', Integer,
-        ForeignKey('bookbrainz.identifier.identifier_id'), primary_key=True,
+        ForeignKey('bookbrainz.identifier.identifier_id',
+                   deferrable=True), primary_key=True,
         nullable=False
     ),
     schema='bookbrainz'
@@ -61,10 +65,12 @@ WORK_DATA__LANGUAGE = Table(
     'work_data__language', Base.metadata,
     Column(
         'work_data_id', Integer,
-        ForeignKey('bookbrainz.work_data.entity_data_id'), primary_key=True
+        ForeignKey('bookbrainz.work_data.entity_data_id',
+                   deferrable=True), primary_key=True
     ),
     Column(
-        'language_id', Integer, ForeignKey('musicbrainz.language.id'),
+        'language_id', Integer, ForeignKey('musicbrainz.language.id',
+                                           deferrable=True),
         primary_key=True
     ),
     schema='bookbrainz'
@@ -123,14 +129,15 @@ class CreatorCreditName(Base):
     __table_args__ = {'schema': 'bookbrainz'}
 
     creator_credit_id = Column(
-        Integer, ForeignKey('bookbrainz.creator_credit.creator_credit_id'),
-        primary_key=True
+        Integer, ForeignKey('bookbrainz.creator_credit.creator_credit_id',
+                            deferrable=True), primary_key=True
     )
 
     position = Column(SmallInteger, primary_key=True, autoincrement=False)
 
     creator_gid = Column(
-        UUID(as_uuid=True), ForeignKey('bookbrainz.entity.entity_gid')
+        UUID(as_uuid=True), ForeignKey('bookbrainz.entity.entity_gid',
+                                       deferrable=True)
     )
 
     name = Column(Unicode, nullable=False)
@@ -164,12 +171,16 @@ class EntityData(Base):
 
     entity_data_id = Column(Integer, primary_key=True)
 
-    annotation_id = Column(Integer,
-                           ForeignKey('bookbrainz.annotation.annotation_id'))
-    disambiguation_id = Column(
-        Integer, ForeignKey('bookbrainz.disambiguation.disambiguation_id')
+    annotation_id = Column(
+        Integer, ForeignKey('bookbrainz.annotation.annotation_id',
+                            deferrable=True)
     )
-    default_alias_id = Column(Integer, ForeignKey('bookbrainz.alias.alias_id'))
+    disambiguation_id = Column(
+        Integer, ForeignKey('bookbrainz.disambiguation.disambiguation_id',
+                            deferrable=True)
+    )
+    default_alias_id = Column(Integer, ForeignKey('bookbrainz.alias.alias_id',
+                                                  deferrable=True))
 
     annotation = relationship('Annotation')
     disambiguation = relationship('Disambiguation')
@@ -251,12 +262,14 @@ class PublicationData(EntityData):
     __table_args__ = {'schema': 'bookbrainz'}
 
     entity_data_id = Column(
-        Integer, ForeignKey('bookbrainz.entity_data.entity_data_id'),
+        Integer, ForeignKey('bookbrainz.entity_data.entity_data_id',
+                            deferrable=True),
         primary_key=True
     )
 
     publication_type_id = Column(
-        Integer, ForeignKey('bookbrainz.publication_type.publication_type_id')
+        Integer, ForeignKey('bookbrainz.publication_type.publication_type_id',
+                            deferrable=True)
     )
 
     publication_type = relationship('PublicationType')
@@ -315,7 +328,8 @@ class CreatorData(EntityData):
     __table_args__ = {'schema': 'bookbrainz'}
 
     entity_data_id = Column(
-        Integer, ForeignKey('bookbrainz.entity_data.entity_data_id'),
+        Integer, ForeignKey('bookbrainz.entity_data.entity_data_id',
+                            deferrable=True),
         primary_key=True
     )
 
@@ -340,9 +354,11 @@ class CreatorData(EntityData):
     ended = Column(Boolean, server_default='false')
 
     country_id = Column(Integer)
-    gender_id = Column(Integer, ForeignKey('musicbrainz.gender.id'))
+    gender_id = Column(Integer, ForeignKey('musicbrainz.gender.id',
+                                           deferrable=True))
     creator_type_id = Column(
-        Integer, ForeignKey('bookbrainz.creator_type.creator_type_id')
+        Integer, ForeignKey('bookbrainz.creator_type.creator_type_id',
+                            deferrable=True)
     )
 
     gender = relationship(Gender)
@@ -444,7 +460,8 @@ class PublisherData(EntityData):
     __table_args__ = {'schema': 'bookbrainz'}
 
     entity_data_id = Column(
-        Integer, ForeignKey('bookbrainz.entity_data.entity_data_id'),
+        Integer, ForeignKey('bookbrainz.entity_data.entity_data_id',
+                            deferrable=True),
         primary_key=True
     )
 
@@ -470,7 +487,8 @@ class PublisherData(EntityData):
 
     country_id = Column(Integer)
     publisher_type_id = Column(
-        Integer, ForeignKey('bookbrainz.publisher_type.publisher_type_id')
+        Integer, ForeignKey('bookbrainz.publisher_type.publisher_type_id',
+                            deferrable=True)
     )
 
     publisher_type = relationship('PublisherType')
@@ -567,16 +585,18 @@ class EditionData(EntityData):
     __table_args__ = {'schema': 'bookbrainz'}
 
     entity_data_id = Column(
-        Integer, ForeignKey('bookbrainz.entity_data.entity_data_id'),
+        Integer, ForeignKey('bookbrainz.entity_data.entity_data_id',
+                            deferrable=True),
         primary_key=True
     )
 
     publication_gid = Column(
-        UUID(as_uuid=True), ForeignKey(Publication.entity_gid)
+        UUID(as_uuid=True), ForeignKey(Publication.entity_gid, deferrable=True)
     )
 
     creator_credit_id = Column(
-        Integer, ForeignKey('bookbrainz.creator_credit.creator_credit_id')
+        Integer, ForeignKey('bookbrainz.creator_credit.creator_credit_id',
+                            deferrable=True)
     )
 
     release_date = Column(Date)
@@ -601,16 +621,19 @@ class EditionData(EntityData):
     # TODO: add script ID, when that's replicated from MB
 
     country_id = Column(Integer)
-    language_id = Column(Integer, ForeignKey('musicbrainz.language.id'))
+    language_id = Column(Integer, ForeignKey('musicbrainz.language.id',
+                                             deferrable=True))
     edition_format_id = Column(
-        Integer, ForeignKey('bookbrainz.edition_format.edition_format_id')
+        Integer, ForeignKey('bookbrainz.edition_format.edition_format_id',
+                            deferrable=True)
     )
     edition_status_id = Column(
-        Integer, ForeignKey('bookbrainz.edition_status.edition_status_id')
+        Integer, ForeignKey('bookbrainz.edition_status.edition_status_id',
+                            deferrable=True)
     )
 
     publisher_gid = Column(
-        UUID(as_uuid=True), ForeignKey(Publisher.entity_gid)
+        UUID(as_uuid=True), ForeignKey(Publisher.entity_gid, deferrable=True)
     )
 
     publication = relationship('Publication', foreign_keys=[publication_gid])
@@ -748,12 +771,14 @@ class WorkData(EntityData):
     __table_args__ = {'schema': 'bookbrainz'}
 
     entity_data_id = Column(
-        Integer, ForeignKey('bookbrainz.entity_data.entity_data_id'),
-        primary_key=True
+        Integer, ForeignKey('bookbrainz.entity_data.entity_data_id',
+                            deferrable=True), primary_key=True
     )
 
-    work_type_id = Column(Integer,
-                          ForeignKey('bookbrainz.work_type.work_type_id'))
+    work_type_id = Column(
+        Integer, ForeignKey('bookbrainz.work_type.work_type_id',
+                            deferrable=True)
+    )
 
     work_type = relationship('WorkType')
     languages = relationship(Language, secondary=WORK_DATA__LANGUAGE)
