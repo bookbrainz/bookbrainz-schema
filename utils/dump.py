@@ -185,9 +185,14 @@ def compress_group(source_dir, group_name, group_tables, dest_dir):
     dest_file = os.path.join(dest_dir, 'bbdump-' + group_name + '.tar.bz2')
     output_file = tarfile.open(dest_file, 'w:bz2')
 
-    for _, tables in group_tables:
+    for schema, tables in group_tables:
         for table in tables:
-            output_file.add(os.path.join(source_dir, table))
+            qualified_name = ((schema + '.' + table) if schema is not None
+                              else table)
+            output_file.add(
+                os.path.join(source_dir, qualified_name),
+                os.path.join('bbdump', qualified_name)
+            )
 
     output_file.close()
 
@@ -204,7 +209,7 @@ def dump_table(cursor, output_dir, schema, table):
     """ Dumps a particular table to the provided output directory. """
     qualified_name = (schema + '.' + table) if schema is not None else table
     print("\tDumping Table {}...".format(qualified_name))
-    with open(os.path.join(output_dir, table), 'wb') as f:
+    with open(os.path.join(output_dir, qualified_name), 'wb') as f:
         cursor.copy_to(f, qualified_name)
 
 if __name__ == "__main__":
