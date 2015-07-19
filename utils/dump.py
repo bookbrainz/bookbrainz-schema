@@ -103,7 +103,6 @@ TEMPORARIES = [
     """
         SELECT
             user_id, name,
-            'bookbrainz' AS password,
             '' AS email,
             reputation,
             NULL as bio,
@@ -111,7 +110,8 @@ TEMPORARIES = [
             created_at, active_at, user_type_id,
             NULL as gender_id,
             NULL as country_id,
-            total_revisions, revisions_applied, revisions_reverted
+            'bookbrainz' AS password,
+            revisions_applied, revisions_reverted, total_revisions
         INTO TEMPORARY user_sanitised
         FROM bookbrainz.user
     """
