@@ -34,6 +34,13 @@ from .revision import (Revision, EntityRevision, RelationshipRevision,
 from .relationships import (Relationship, RelationshipType, RelationshipData,
                             RelationshipEntity, RelationshipText)
 
+INCLUDED_TABLES = [
+    'musicbrainz.language',
+    'musicbrainz.gender'
+]
+
 
 def create_all(engine):
-    Base.metadata.create_all(engine)
+    tables = [t for name, t in Base.metadata.tables.items()
+              if name.startswith('bookbrainz') or name in INCLUDED_TABLES]
+    Base.metadata.create_all(engine, tables=tables)
