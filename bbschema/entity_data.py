@@ -650,6 +650,11 @@ class EditionData(EntityData):
     def __eq__(self, other):
         if (self.release_date == other.release_date and
                 self.release_date_precision == other.release_date_precision and
+                self.pages == other.pages and
+                self.width == other.width and
+                self.height == other.height and
+                self.depth == other.depth and
+                self.weight == other.weight and
                 self.country_id == other.country_id and
                 self.edition_format_id == other.edition_format_id and
                 self.edition_status_id == other.edition_status_id and
@@ -680,6 +685,12 @@ class EditionData(EntityData):
             new_data.release_date = parsed_date_info[0]
             new_data.release_date_precision = parsed_date_info[1]
 
+        new_data.pages = data.get('pages')
+        new_data.width = data.get('width')
+        new_data.height = data.get('height')
+        new_data.depth = data.get('depth')
+        new_data.weight = data.get('weight')
+
         new_data.country_id = data.get('country_id')
         new_data.language_id =\
             data.get('language', {}).get('language_id')
@@ -690,8 +701,8 @@ class EditionData(EntityData):
 
         publisher_gid = data.get('publisher')
         if publisher_gid is not None:
-            publisher =\
-                session.query(Publisher).filter_by(entity_gid=publisher_gid).one()
+            publisher = session.query(Publisher)\
+                .filter_by(entity_gid=publisher_gid).one()
 
             new_data.publisher = publisher
 
@@ -705,6 +716,16 @@ class EditionData(EntityData):
             new_data.release_date = parsed_date_info[0]
             new_data.release_date_precision = parsed_date_info[1]
 
+        if 'pages' in data:
+            new_data.pages = data['pages']
+        if 'width' in data:
+            new_data.width = data['width']
+        if 'height' in data:
+            new_data.height = data['height']
+        if 'depth' in data:
+            new_data.depth = data['depth']
+        if 'weight' in data:
+            new_data.weight = data['weight']
         if 'country_id' in data:
             new_data.country_id = data['country_id']
         if (('edition_format' in data) and
