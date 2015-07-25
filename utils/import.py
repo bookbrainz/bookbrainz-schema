@@ -37,6 +37,7 @@ TABLE_RENAMES = {
     'user_sanitised': 'bookbrainz.user'
 }
 
+
 @click.command()
 @click.argument('username')
 @click.argument('database')
@@ -66,7 +67,6 @@ def imp(username, database, password, **kwargs):
     temp_output_dir = tempfile.mkdtemp(prefix='bbimport', dir=temp_dir)
 
     num_tables = 0
-    tables_imported = set()
 
     for source in sources:
         archive = tarfile.open(source, 'r:bz2')
@@ -79,7 +79,9 @@ def imp(username, database, password, **kwargs):
         )
         with conn.cursor() as curs:
             curs.execute('SET CONSTRAINTS ALL DEFERRED')
-            import_directory(os.path.join(temp_output_dir, 'bbdump'), curs)
+            num_tables +=\
+                import_directory(os.path.join(temp_output_dir, 'bbdump'), curs)
+            set_sequence_values(curs)
 
     shutil.rmtree(temp_output_dir)
     if not kwargs['keep_files']:
@@ -90,11 +92,68 @@ def imp(username, database, password, **kwargs):
 
 
 def import_directory(source_dir, curs):
+    """ Import BookBrainz tables from a directory containing dump files. """
+    num_tables = 0
     for table in os.listdir(source_dir):
-        with open(os.path.join(source_dir, table), 'rb') as f:
+        with open(os.path.join(source_dir, table), 'rb') as f_obj:
             table = TABLE_RENAMES.get(table, table)
             print('Importing to {}...'.format(table))
-            curs.copy_from(f, table)
+            curs.copy_from(f_obj, table)
+            num_tables += 1
+    return num_tables
+
+SEQUENCES = (
+    ('bookbrainz.disambiguation_id_seq',
+     'bookbrainz.disambiguation.disambiguation_id'),
+    ('bookbrainz.edition_status_id_seq',
+     'bookbrainz.edition_status.edition_status_id'),
+    ('musicbrainz.language_id_seq', 'musicbrainz.language.id'),
+    ('bookbrainz.work_type_id_seq',
+     'bookbrainz.edition_status.edition_status_id'),
+    ('bookbrainz.entity_data_id_seq',
+     'bookbrainz.entity_data.entity_data_id'),
+    ('bookbrainz.rel_type_id_seq',
+     'bookbrainz.rel_type.relationship_type_id'),
+    ('bookbrainz.annotation_id_seq',
+     'bookbrainz.annotation.annotation_id'),
+    ('bookbrainz.creator_type_id_seq',
+     'bookbrainz.creator_type.creator_type_id'),
+    ('musicbrainz.gender_id_seq', 'musicbrainz.gender.id'),
+    ('bookbrainz.user_type_id_seq', 'bookbrainz.user_type.user_type_id'),
+    ('bookbrainz.publisher_type_id_seq',
+     'bookbrainz.publisher_type.publisher_type_id'),
+    ('bookbrainz.publication_type_id_seq',
+     'bookbrainz.publication_type.publication_type_id'),
+    ('bookbrainz.user_id_seq', 'bookbrainz.user.user_id'),
+    ('bookbrainz.alias_id_seq', 'bookbrainz.alias.alias_id'),
+    ('bookbrainz.rel_tree_id_seq', 'bookbrainz.rel_data.relationship_data_id'),
+    ('bookbrainz.revision_id_seq', 'bookbrainz.revision.revision_id'),
+    ('bookbrainz.message_message_id_seq', 'bookbrainz.message.message_id'),
+    ('bookbrainz.rel_id_seq', 'bookbrainz.rel.relationship_id'),
+    ('bookbrainz.edit_note_id_seq',
+     'bookbrainz.revision_note.revision_note_id'),
+    ('bookbrainz.creator_credit_creator_credit_id_seq',
+     'bookbrainz.creator_credit.creator_credit_id'),
+    ('bookbrainz.identifier_type_identifier_type_id_seq',
+     'bookbrainz.identifier_type.identifier_type_id'),
+    ('bookbrainz.identifier_identifier_id_seq',
+     'bookbrainz.identifier.identifier_id'),
+    ('bookbrainz.edition_format_edition_format_id_seq',
+     'bookbrainz.edition_format.edition_format_id')
+)
+
+
+def set_sequence_values(curs):
+    """ Sets the next values of all sequences used for generation of
+    autoincrement columns.
+    """
+
+    query_template =\
+        "SELECT setval('{}', COALESCE((SELECT MAX({}) + 1 FROM {}), 1), false)"
+    for sequence, column in SEQUENCES:
+        table = '.'.join(column.split('.')[:-1])
+        query = query_template.format(sequence, column, table)
+        curs.execute(query)
 
 if __name__ == "__main__":
     imp()
