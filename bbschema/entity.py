@@ -358,6 +358,12 @@ def update_aliases(aliases, default_alias_id, revision_json):
     return (list(alias_dict.values()) + new_aliases, default_alias)
 
 
+def diff_aliases(left, right):
+    aliases_in_left = [l for l in left if l not in right]
+    aliases_in_right = [r for r in right if r not in left]
+
+    return (aliases_in_left, aliases_in_right)
+
 def create_identifiers(revision_json):
     print revision_json
     if 'identifiers' not in revision_json:
@@ -390,3 +396,10 @@ def update_identifiers(identifiers, revision_json):
                     identifier_dict[identifier_id].update(identifier_json)
 
     return list(identifier_dict.values()) + new_identifiers
+
+
+def diff_identifiers(left, right):
+    identifiers_in_left = [l for l in left if l not in right]
+    identifiers_in_right = [r for r in right if r not in left]
+
+    return (identifiers_in_left, identifiers_in_right)

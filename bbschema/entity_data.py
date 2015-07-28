@@ -23,7 +23,7 @@ import datetime
 from bbschema.base import Base
 from bbschema.entity import (Annotation, Creator, Disambiguation, Publication,
                              Publisher, create_aliases, create_identifiers,
-                             update_aliases, update_identifiers)
+                             update_aliases, update_identifiers, diff_aliases, diff_identifiers)
 from bbschema.musicbrainz import Language, Gender
 from sqlalchemy import (Boolean, Column, Date, Enum, ForeignKey, Integer,
                         SmallInteger, Table, Unicode, UnicodeText)
@@ -207,6 +207,28 @@ class EntityData(Base):
             (self.default_alias == other.default_alias)
         )
 
+    def diff(self, other):
+        data = {
+            'annotation': (self.annotation, other.annotation),
+            'disambiguation': (self.disambiguation, other.disambiguation),
+            'default_alias': (self.default_alias, other.default_alias)
+        }
+
+        alias_diff = diff_aliases(self.aliases, other.aliases)
+        identifier_diff = diff_identifiers(self.identifiers, other.identifiers)
+
+        result = {k: v for k, v in data.items() if v[0] != v[1]}
+
+        # Check whether anything has actually changed with aliases
+        if alias_diff[0] or alias_diff[1]:
+            result['aliases'] = alias_diff
+
+        if identifier_diff[0] or identifier_diff[1]:
+            result['identifiers'] = identifier_diff
+
+        return result
+
+
     @classmethod
     def create(cls, data, session):
         new_data = cls()
@@ -284,6 +306,9 @@ class PublicationData(EntityData):
             return True
 
         return False
+
+    def diff(self, other):
+        return super(PublicationData, self).diff(other)
 
     @classmethod
     def create(cls, data, session):
@@ -381,6 +406,9 @@ class CreatorData(EntityData):
             return True
 
         return False
+
+    def diff(self, other):
+        return super(CreatorData, self).diff(other)
 
     @classmethod
     def create(cls, data, session):
@@ -509,6 +537,9 @@ class PublisherData(EntityData):
             return True
 
         return False
+
+    def diff(self, other):
+        return super(PublisherData, self).diff(other)
 
     @classmethod
     def create(cls, data, session):
@@ -666,6 +697,28 @@ class EditionData(EntityData):
 
         return False
 
+    def diff(self, other):
+        data = {
+            'release_date': (
+                format_date(self.release_date, self.release_date_precision),
+                format_date(other.release_date, other.release_date_precision)
+            ),
+            'pages': (self.pages, other.pages),
+            'width': (self.width, other.width),
+            'height': (self.height, other.height),
+            'depth': (self.depth, other.depth),
+            'weight': (self.weight, other.weight),
+            'edition_format': (self.edition_format, other.edition_format),
+            'edition_status': (self.edition_status, other.edition_status),
+            'language': (self.language, other.language),
+            'publication': (self.publication, other.publication),
+            'publisher': (self.publisher, other.publisher)
+        }
+
+        result = {k: v for k, v in data.items() if v[0] != v[1]}
+        result.update(super(EditionData, self).diff(other))
+        return result
+
     @classmethod
     def create(cls, data, session):
         new_data = super(EditionData, cls).create(data, session)
@@ -815,6 +868,9 @@ class WorkData(EntityData):
             return True
 
         return False
+
+    def diff(self, other):
+        return super(WorkData, self).diff(other)
 
     @classmethod
     def create(cls, data, session):
