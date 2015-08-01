@@ -53,5 +53,9 @@ docs/_build/
 # PyBuilder
 target/
 
+# PyCharm
+.idea
+
 # Project-specific
 bbschema/config.py
+alembic.ini
