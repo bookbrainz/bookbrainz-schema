@@ -79,6 +79,25 @@ class RelationshipData(Base):
 
     relationship_type = relationship('RelationshipType')
 
+    def diff(self, other):
+        other_entities = getattr(other, 'entities', [])
+        other_texts = getattr(other, 'texts', [])
+        data = {
+            'relationship_type': (self.relationship_type,
+                                  getattr(other, 'relationship_type', None)),
+            'entities': (
+                [e for e in self.entities if e not in other_entities],
+                [e for e in other_entities if e not in self.entities]
+            ),
+            'texts': (
+                [e for e in self.texts if e not in other_texts],
+                [e for e in other_texts if e not in self.texts]
+            )
+        }
+
+        return {k: v for k, v in data.items() if v[0] != v[1]}
+
+
     @classmethod
     def create(cls, data):
         result = cls()

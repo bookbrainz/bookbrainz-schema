@@ -209,25 +209,20 @@ class EntityData(Base):
 
     def diff(self, other):
         data = {
-            'annotation': (self.annotation, other.annotation),
-            'disambiguation': (self.disambiguation, other.disambiguation),
-            'default_alias': (self.default_alias, other.default_alias)
+            'annotation': (self.annotation,
+                           getattr(other, 'annotation', None)),
+            'disambiguation': (self.disambiguation,
+                               getattr(other, 'disambiguation', None)),
+            'default_alias': (self.default_alias,
+                              getattr(other, 'default_alias', None)),
+            'aliases': diff_aliases(self.aliases,
+                                    getattr(other, 'aliases', [])),
+            'identifiers': diff_identifiers(self.identifiers,
+                                            getattr(other, 'identifiers', []))
         }
 
-        alias_diff = diff_aliases(self.aliases, other.aliases)
-        identifier_diff = diff_identifiers(self.identifiers, other.identifiers)
-
         result = {k: v for k, v in data.items() if v[0] != v[1]}
-
-        # Check whether anything has actually changed with aliases
-        if alias_diff[0] or alias_diff[1]:
-            result['aliases'] = alias_diff
-
-        if identifier_diff[0] or identifier_diff[1]:
-            result['identifiers'] = identifier_diff
-
         return result
-
 
     @classmethod
     def create(cls, data, session):
@@ -308,7 +303,14 @@ class PublicationData(EntityData):
         return False
 
     def diff(self, other):
-        return super(PublicationData, self).diff(other)
+        data = {
+            'publication_type': (self.publication_type,
+                                 getattr(other, 'publication_type', None))
+        }
+
+        result = {k: v for k, v in data.items() if v[0] != v[1]}
+        result.update(super(PublicationData, self).diff(other))
+        return result
 
     @classmethod
     def create(cls, data, session):
@@ -408,7 +410,26 @@ class CreatorData(EntityData):
         return False
 
     def diff(self, other):
-        return super(CreatorData, self).diff(other)
+        data = {
+            'begin_date': (
+                format_date(self.begin_date, self.begin_date_precision),
+                format_date(other.begin_date, other.begin_date_precision)
+                if other is not None else None
+            ),
+            'end_date': (
+                format_date(self.end_date, self.end_date_precision),
+                format_date(other.end_date, other.end_date_precision)
+                if other is not None else None
+            ),
+            'ended': (self.ended, getattr(other, 'ended', None)),
+            'gender': (self.gender, getattr(other, 'gender', None)),
+            'creator_type': (self.creator_type,
+                             getattr(other, 'creator_type', None))
+        }
+
+        result = {k: v for k, v in data.items() if v[0] != v[1]}
+        result.update(super(CreatorData, self).diff(other))
+        return result
 
     @classmethod
     def create(cls, data, session):
@@ -539,7 +560,25 @@ class PublisherData(EntityData):
         return False
 
     def diff(self, other):
-        return super(PublisherData, self).diff(other)
+        data = {
+            'begin_date': (
+                format_date(self.begin_date, self.begin_date_precision),
+                format_date(other.begin_date, other.begin_date_precision)
+                if other is not None else None
+            ),
+            'end_date': (
+                format_date(self.end_date, self.end_date_precision),
+                format_date(other.end_date, other.end_date_precision)
+                if other is not None else None
+            ),
+            'ended': (self.ended, getattr(other, 'ended', None)),
+            'publisher_type': (self.publisher_type,
+                               getattr(other, 'publisher_type', None))
+        }
+
+        result = {k: v for k, v in data.items() if v[0] != v[1]}
+        result.update(super(PublisherData, self).diff(other))
+        return result
 
     @classmethod
     def create(cls, data, session):
@@ -702,17 +741,22 @@ class EditionData(EntityData):
             'release_date': (
                 format_date(self.release_date, self.release_date_precision),
                 format_date(other.release_date, other.release_date_precision)
+                if other is not None else None
             ),
-            'pages': (self.pages, other.pages),
-            'width': (self.width, other.width),
-            'height': (self.height, other.height),
-            'depth': (self.depth, other.depth),
-            'weight': (self.weight, other.weight),
-            'edition_format': (self.edition_format, other.edition_format),
-            'edition_status': (self.edition_status, other.edition_status),
-            'language': (self.language, other.language),
-            'publication': (self.publication, other.publication),
-            'publisher': (self.publisher, other.publisher)
+            'pages': (self.pages, getattr(other, 'pages', None)),
+            'width': (self.width, getattr(other, 'width', None)),
+            'height': (self.height, getattr(other, 'height', None)),
+            'depth': (self.depth, getattr(other, 'depth', None)),
+            'weight': (self.weight, getattr(other, 'weight', None)),
+            'edition_format': (self.edition_format,
+                               getattr(other, 'edition_format', None)),
+            'edition_status': (self.edition_status,
+                               getattr(other, 'edition_status', None)),
+            'language': (self.language,
+                         getattr(other, 'language', None)),
+            'publication': (self.publication,
+                            getattr(other, 'publication', None)),
+            'publisher': (self.publisher, getattr(other, 'publisher', None))
         }
 
         result = {k: v for k, v in data.items() if v[0] != v[1]}
@@ -870,7 +914,19 @@ class WorkData(EntityData):
         return False
 
     def diff(self, other):
-        return super(WorkData, self).diff(other)
+        other_languages = getattr(other, 'languages', None)
+        data = {
+            'work_type': (self.work_type, getattr(other, 'work_type', None)),
+            'languages': (
+                [l for l in self.languages if l not in other_languages],
+                [l for l in other_languages if l not in self.languages]
+            )
+        }
+
+        result = {k: v for k, v in data.items() if v[0] != v[1]}
+        result.update(super(WorkData, self).diff(other))
+        return result
+
 
     @classmethod
     def create(cls, data, session):
