@@ -961,7 +961,7 @@ class WorkData(EntityData):
             languages = data['languages']
             removed_language_ids = [old for old, new in languages if new is None]
             added_language_ids = [new for old, new in languages if old is None]
-            new_data.languages = [x for x in new_data.languages if x.language_id not in removed_language_ids]
+            new_data.languages = [x for x in new_data.languages if x.id not in removed_language_ids]
 
             for language_id in added_language_ids:
                 language = session.query(Language).get(language_id)
