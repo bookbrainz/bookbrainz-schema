@@ -93,6 +93,9 @@ def parse_date_string(date_string):
 
 
 def format_date(date, precision):
+    if date is None:
+        return None
+
     if precision == 'YEAR':
         return '{:02}'.format(date.year)
     elif precision == 'MONTH':
