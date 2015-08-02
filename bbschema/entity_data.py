@@ -917,7 +917,7 @@ class WorkData(EntityData):
         return False
 
     def diff(self, other):
-        other_languages = getattr(other, 'languages', None)
+        other_languages = getattr(other, 'languages', [])
         data = {
             'work_type': (self.work_type, getattr(other, 'work_type', None)),
             'languages': (
