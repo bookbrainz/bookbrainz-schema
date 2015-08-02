@@ -87,6 +87,14 @@ class Edition(Entity):
         backref='editions'
     )
 
+    publisher = relationship(
+        'Publisher',
+        primaryjoin='Edition.master_revision_id == EntityRevision.revision_id',
+        secondary='join(EntityRevision, EditionData, EntityRevision.entity_data_id == EditionData.entity_data_id)',
+        secondaryjoin='EditionData.publisher_gid == Publisher.entity_gid',
+        backref='editions'
+    )
+
 
 class Publisher(Entity):
     __mapper_args__ = {
