@@ -139,8 +139,8 @@ class Annotation(Base):
 
     @classmethod
     def create(cls, revision_json):
-        if (('annotation' not in revision_json) or
-                (revision_json['annotation'] is None)):
+        if ('annotation' not in revision_json or
+                not revision_json['annotation']):
             return None
 
         return cls(content=revision_json['annotation'])
@@ -149,11 +149,15 @@ class Annotation(Base):
         if 'annotation' not in revision_json:
             return self
 
-        if self.content == revision_json['annotation']:
-            return self
+        # If annotation is empty or otherwise falsey, return None
+        if not revision_json['annotation']:
+            return None
 
-        new_annotation = self.copy()
-        new_annotation.content = revision_json['annotation']
+        if self.content == revision_json['annotation']:
+            new_annotation = self
+        else:
+            new_annotation = self.copy()
+            new_annotation.content = revision_json['annotation']
 
         return new_annotation
 
@@ -174,8 +178,8 @@ class Disambiguation(Base):
 
     @classmethod
     def create(cls, revision_json):
-        if (('disambiguation' not in revision_json) or
-                (revision_json['disambiguation'] is None)):
+        if ('disambiguation' not in revision_json or
+                not revision_json['disambiguation']):
             return None
 
         return cls(comment=revision_json['disambiguation'])
@@ -184,11 +188,15 @@ class Disambiguation(Base):
         if 'disambiguation' not in revision_json:
             return self
 
-        if self.comment == revision_json['disambiguation']:
-            return self
+        # If annotation is empty or otherwise falsey, return None
+        if not revision_json['disambiguation']:
+            return None
 
-        new_disambiguation = self.copy()
-        new_disambiguation.comment = revision_json['disambiguation']
+        if self.comment == revision_json['disambiguation']:
+            new_disambiguation = self
+        else:
+            new_disambiguation = self.copy()
+            new_disambiguation.comment = revision_json['disambiguation']
 
         return new_disambiguation
 
