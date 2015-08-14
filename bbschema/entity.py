@@ -224,6 +224,9 @@ class Alias(Base):
                      language_id=self.language_id, primary=self.primary)
 
     def __eq__(self, other):
+        if other is None:
+            return False
+
         return ((self.name == other.name) and
                 (self.sort_name == other.sort_name) and
                 (self.language_id == other.language_id) and
@@ -231,6 +234,9 @@ class Alias(Base):
 
     @classmethod
     def create(cls, alias_json):
+        if 'name' not in alias_json or 'sort_name' not in alias_json:
+            return None
+
         return cls(
             name=alias_json['name'],
             sort_name=alias_json['sort_name'],
@@ -338,9 +344,14 @@ def create_aliases(revision_json):
     aliases = []
     default_alias = None
     for alias in revision_json['aliases']:
-        aliases.append(Alias.create(alias))
-        if alias.get('default', False):
-            default_alias = aliases[-1]
+        result = Alias.create(alias)
+        if result is not None:
+            aliases.append(result)
+            if alias.get('default', False):
+                default_alias = aliases[-1]
+
+    if default_alias is None and aliases:
+        default_alias = aliases[0]
 
     return (aliases, default_alias)
 
@@ -381,7 +392,6 @@ def diff_aliases(left, right):
     return (aliases_in_left, aliases_in_right)
 
 def create_identifiers(revision_json):
-    print revision_json
     if 'identifiers' not in revision_json:
         return []
 
@@ -392,9 +402,9 @@ def create_identifiers(revision_json):
 
 
 def update_identifiers(identifiers, revision_json):
-    if (('identifiers' not in revision_json) or
-            (revision_json['identifiers'] is None)):
-        return (identifiers, None)
+    if ('identifiers' not in revision_json or
+            not revision_json['identifiers']):
+        return identifiers
 
     # Create a dictionary, to make it easier look up aliases by ID
     identifier_dict = dict((identifier.identifier_id, identifier)

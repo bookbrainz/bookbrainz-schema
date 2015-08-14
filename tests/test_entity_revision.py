@@ -71,7 +71,7 @@ class TestRelationshipViews(TestCase):
         self.assertEqual(aliases[0].primary, True)
 
         # Check properties of entity_tree
-        self.assertEqual(entity_data.default_alias_id, None)
+        self.assertEqual(entity_data.default_alias_id, aliases[0].alias_id)
 
         # Check properties of publication_data
         self.assertEqual(entity_data.publication_type_id, 1)
