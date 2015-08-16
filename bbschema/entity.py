@@ -237,6 +237,19 @@ class Alias(Base):
         if 'name' not in alias_json or 'sort_name' not in alias_json:
             return None
 
+        if (not isinstance(alias_json['name'], (bytes, unicode)) or
+                not isinstance(alias_json['sort_name'], (bytes, unicode))):
+            return None
+
+        if ('language_id' in alias_json and
+                (not isinstance(alias_json['language_id'], int) or
+                alias_json['language_id'] < 1)):
+            return None
+
+        if ('primary' in alias_json and
+                not isinstance(alias_json['primary'], bool)):
+            return None
+
         return cls(
             name=alias_json['name'],
             sort_name=alias_json['sort_name'],
