@@ -232,6 +232,9 @@ class Alias(Base):
                 (self.language_id == other.language_id) and
                 (self.primary == other.primary))
 
+    def __ne__(self, other):
+        return not self == other
+
     @classmethod
     def create(cls, alias_json):
         if 'name' not in alias_json or 'sort_name' not in alias_json:
@@ -258,6 +261,23 @@ class Alias(Base):
         )
 
     def update(self, alias_json):
+        if ('name' in alias_json and
+                not isinstance(alias_json['name'], (bytes, unicode))):
+            return self
+
+        if ('sort_name' in alias_json and
+                not isinstance(alias_json['sort_name'], (bytes, unicode))):
+            return self
+
+        if ('language_id' in alias_json and
+                (not isinstance(alias_json['language_id'], int) or
+                alias_json['language_id'] < 1)):
+            return self
+
+        if ('primary' in alias_json and
+                not isinstance(alias_json['primary'], bool)):
+            return self
+
         new = self.copy()
 
         if 'name' in alias_json:
@@ -314,7 +334,7 @@ class Identifier(Base):
         if 'identifier_type_id' in identifier_json:
             new.identifier_type_id =\
                 identifier_json.get('identifier_type', {}).\
-                    get('identifier_type_id')
+                get('identifier_type_id')
 
         return new
 
@@ -388,7 +408,10 @@ def update_aliases(aliases, default_alias_id, revision_json):
                 if alias_json.get('default', False):
                     default_alias = new_aliases[-1]
             else:
-                alias_dict[alias_id] = alias_dict[alias_id].update(alias_json)
+                updated_alias = alias_dict[alias_id].update(alias_json)
+                if updated_alias != alias_dict[alias_id]:
+                    alias_dict[alias_id] = updated_alias
+
                 if alias_json.get('default', False):
                     default_alias = alias_dict[alias_id]
 
