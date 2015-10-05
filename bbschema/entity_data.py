@@ -473,8 +473,9 @@ class CreatorData(EntityData):
             new_data.ended = data['ended']
         if 'country_id' in data:
             new_data.country_id = data['country_id']
-        if 'gender_id' in data:
-            new_data.gender_id = data['gender_id']
+        if (('gender' in data) and
+                ('gender_id' in data['gender'])):
+            new_data.gender_id = data['gender']['gender_id']
         if (('creator_type' in data) and
                 ('creator_type_id' in data['creator_type'])):
             new_data.creator_type_id = data['creator_type']['creator_type_id']
