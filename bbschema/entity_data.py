@@ -864,6 +864,11 @@ class EditionData(EntityData):
         copied_data.release_date_precision = self.release_date_precision
         copied_data.edition_format_id = self.edition_format_id
         copied_data.edition_status_id = self.edition_status_id
+        copied_data.pages = self.pages
+        copied_data.width = self.width
+        copied_data.height = self.height
+        copied_data.depth = self.depth
+        copied_data.weight = self.weight
         copied_data.country_id = self.country_id
         copied_data.language_id = self.language_id
         copied_data.publication_gid = self.publication_gid
