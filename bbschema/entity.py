@@ -134,6 +134,9 @@ class Annotation(Base):
         return Annotation(content=self.content, created_at=self.created_at)
 
     def __eq__(self, other):
+        if other is None:
+            return False
+
         return ((self.content == other.content) and
                 (self.created_at == other.created_at))
 
@@ -174,6 +177,9 @@ class Disambiguation(Base):
         return cls(comment=self.comment)
 
     def __eq__(self, other):
+        if other is None:
+            return False
+
         return (self.comment == other.comment)
 
     @classmethod
@@ -312,8 +318,14 @@ class Identifier(Base):
                           identifier_type_id=self.identifier_type_id)
 
     def __eq__(self, other):
+        if other is None:
+            return False
+
         return ((self.value == other.value) and
                 (self.identifier_type_id == other.identifier_type_id))
+
+    def __ne__(self, other):
+        return not self == other
 
     @classmethod
     def create(cls, identifier_json):
