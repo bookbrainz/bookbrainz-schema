@@ -734,7 +734,9 @@ class EditionData(EntityData):
                 self.edition_status_id == other.edition_status_id and
                 self.language_id == other.language_id and
                 self.publication_gid == other.publication_gid and
+                self.publication == other.publication and
                 self.publisher_gid == other.publisher_gid and
+                self.publisher == other.publisher and
                 super(EditionData, self).__eq__(other)):
             return True
 
