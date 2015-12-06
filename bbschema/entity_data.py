@@ -196,9 +196,15 @@ class EntityData(Base):
 
     def __eq__(self, other):
         # Assume that other is an EntityData
+        if len(self.aliases) != len(other.aliases):
+            return False
+
         for left, right in zip(self.aliases, other.aliases):
             if left != right:
                 return False
+
+        if len(self.identifiers) != len(other.identifiers):
+            return False
 
         for left, right in zip(self.identifiers, other.identifiers):
             if left != right:
