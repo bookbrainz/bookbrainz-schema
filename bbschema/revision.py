@@ -96,7 +96,7 @@ class EntityRevision(Revision):
     )
     entity_data_id = Column(
         Integer, ForeignKey('bookbrainz.entity_data.entity_data_id',
-                            deferrable=True), nullable=False
+                            deferrable=True)
     )
 
     entity = relationship('Entity', foreign_keys=[entity_gid])
