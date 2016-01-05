@@ -113,24 +113,134 @@ def migrate_types(session):
 def migrate_editors(session):
     session.execute("""
         INSERT INTO _bookbrainz.editor (
-          id, name, email, reputation, bio, birth_date, created_at, active_at,
-          type_id, gender_id, area_id, password, revisions_applied,
-          revisions_reverted, total_revisions
+            id, name, email, reputation, bio, birth_date, created_at,
+            active_at, type_id, gender_id, area_id, password,
+            revisions_applied, revisions_reverted, total_revisions
         ) SELECT
-          user_id, name, email, reputation, COALESCE(bio, ''::text),
-          birth_date, created_at, active_at, user_type_id, gender_id, NULL,
-          password, revisions_applied, revisions_reverted, total_revisions
+            user_id, name, email, reputation, COALESCE(bio, ''::text),
+            birth_date, created_at, active_at, user_type_id, gender_id, NULL,
+            password, revisions_applied, revisions_reverted, total_revisions
         FROM bookbrainz.user
     """)
 
     session.execute("""
         INSERT INTO _bookbrainz.editor__language (
-          editor_id, language_id, proficiency
+            editor_id, language_id, proficiency
         ) SELECT
-          user_id, language_id, proficiency::text::_bookbrainz.lang_proficiency
+            user_id, language_id,
+            proficiency::text::_bookbrainz.lang_proficiency
         FROM bookbrainz.user_language
     """)
 
+
+def migrate_revisions(session):
+    session.execute("""
+        INSERT INTO _bookbrainz.revision (
+            id, author_id, created_at, type
+        ) SELECT
+            r.revision_id, r.user_id, r.created_at,
+            e._type::text::_bookbrainz.entity_type
+        FROM bookbrainz.revision r
+        LEFT JOIN bookbrainz.entity_revision er
+            ON r.revision_id = er.revision_id
+        LEFT JOIN bookbrainz.entity e
+            ON e.entity_gid = er.entity_gid;
+    """)
+
+    session.execute("""
+        INSERT INTO _bookbrainz.revision_parent (
+            parent_id, child_id
+        ) SELECT
+            revision_id, parent_id
+        FROM bookbrainz.revision
+        WHERE parent_id IS NOT NULL;
+    """)
+
+    session.execute("""
+        INSERT INTO _bookbrainz.note (
+            id, author_id, revision_id, content, posted_at
+        ) SELECT
+            revision_note_id, user_id, revision_id, content, posted_at
+        FROM bookbrainz.revision_note;
+    """)
+
+
+def limit_query(q, limit):
+    offset = 0
+    results = q.limit(limit).offset(offset).all()
+    while results:
+        for result in results:
+            yield result
+        offset += limit
+        results = q.limit(limit).offset(offset).all()
+
+
+def migrate_entity_data(session):
+    session.execute("""
+        INSERT INTO _bookbrainz.annotation (
+            id, content, last_revision_id
+        ) SELECT DISTINCT ON(a.annotation_id)
+            a.annotation_id, a.content, r.revision_id
+        FROM bookbrainz.entity_revision er
+        LEFT JOIN bookbrainz.revision r
+            ON r.revision_id = er.revision_id
+        LEFT JOIN bookbrainz.entity_data ed
+            ON er.entity_data_id = ed.entity_data_id
+        LEFT JOIN bookbrainz.annotation a
+            ON ed.annotation_id = a.annotation_id
+        WHERE a.annotation_id IS NOT NULL
+        ORDER BY a.annotation_id, revision_id;
+    """)
+
+    session.execute("""
+        INSERT INTO _bookbrainz.disambiguation (
+            id, comment
+        ) SELECT
+            disambiguation_id, COALESCE(comment, ''::text)
+        FROM bookbrainz.disambiguation;
+    """)
+
+    # For each entity, go through all the entity and relationship revisions
+    # Keep track of the aliases, identifiers and relationships on the
+    # entity at all times
+    # For each entity revision, create a new alias set, identifier_set and
+    # relationship set, using the tracked aliases, identifier and
+    # relationships
+    entity_query = session.query(Entity)
+    for entity in limit_query(entity_query, 100):
+        print(entity)
+        print('--------------')
+        entity_revision_query = session.query(EntityRevision).\
+            filter(EntityRevision.entity_gid == entity.entity_gid)
+        relationship_revision_query = session.query(RelationshipRevision).\
+            join(RelationshipData).\
+            join(RelationshipEntity).\
+            filter(RelationshipEntity.entity_gid == entity.entity_gid)
+
+        all_revisions = (
+            entity_revision_query.all() + relationship_revision_query.all()
+        )
+
+        all_revisions = sorted(all_revisions, key=lambda x: x.created_at)
+
+        relationships = []
+        aliases = []
+        identifiers = []
+        for revision in all_revisions:
+            print('r{}'.format(revision.revision_id))
+            if isinstance(revision, EntityRevision):
+                aliases = revision.entity_data.aliases
+                identifiers = revision.entity_data.identifiers
+                print(aliases)
+                print(identifiers)
+                print(relationships)
+            else:
+                relationships.append(revision.relationship)
+                print(aliases)
+                print(identifiers)
+                print(relationships)
+        # Also need to make a new entity data row for each relationship
+        # revision
 
 @click.command()
 @click.argument('username')
@@ -161,6 +271,8 @@ def migrate(username, database, password, **kwargs):
 
     migrate_types(session)
     migrate_editors(session)
+    migrate_revisions(session)
+    migrate_entity_data(session)
 
     session.rollback()
 
