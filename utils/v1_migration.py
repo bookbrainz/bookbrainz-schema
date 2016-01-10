@@ -175,6 +175,349 @@ def limit_query(q, limit):
         results = q.limit(limit).offset(offset).all()
 
 
+def convert_date(date, precision):
+    if date is None:
+        return (None, None, None)
+    else:
+        if precision == 'DAY':
+            return (date.year, date.month, date.day)
+        elif precision == 'MONTH':
+            return (date.year, date.month, None)
+        else:
+            return (date.year, None, None)
+
+
+def insert_creator_data_and_revision(session, entity, revision, alias_set_id,
+                                     identifier_set_id):
+    data = revision.entity_data
+    begin_year, begin_month, begin_day = \
+        convert_date(data.begin_date, data.begin_date_precision)
+    end_year, end_month, end_day = \
+        convert_date(data.end_date, data.end_date_precision)
+
+    result = session.execute(
+        '''INSERT INTO _bookbrainz.creator_data (
+            alias_set_id, identifier_set_id, annotation_id,
+            disambiguation_id, begin_year, begin_month, begin_day, end_year,
+            end_month, end_day, ended, gender_id, type_id
+        ) VALUES (
+            :alias_set_id, :identifier_set_id, :annotation_id,
+            :disambiguation_id,  :begin_year, :begin_month, :begin_day,
+            :end_year, :end_month, :end_day, :ended, :gender_id, :type_id
+        ) RETURNING id''', {
+            'alias_set_id': alias_set_id,
+            'identifier_set_id': identifier_set_id,
+            'annotation_id': data.annotation_id,
+            'disambiguation_id': data.disambiguation_id,
+            'begin_year': begin_year,
+            'begin_month': begin_month,
+            'begin_day': begin_day,
+            'end_year': end_year,
+            'end_month': end_month,
+            'end_day': end_day,
+            'ended': data.ended,
+            'gender_id': data.gender_id,
+            'type_id': data.creator_type_id
+        }
+    )
+    data_id = result.fetchone()[0]
+
+    session.execute(
+        '''INSERT INTO _bookbrainz.creator_revision (
+            id, bbid, data_id
+        ) VALUES (
+            :id, :bbid, :data_id
+        )''', {
+            'id': revision.revision_id,
+            'bbid': entity.entity_gid,
+            'data_id': data_id
+        }
+    )
+
+
+def insert_edition_data_and_revision(session, entity, revision, alias_set_id,
+                                     identifier_set_id):
+    data = revision.entity_data
+
+    result = session.execute(
+        '''INSERT INTO _bookbrainz.edition_data (
+            alias_set_id, identifier_set_id, annotation_id,
+            disambiguation_id, publication_bbid, width, height, depth,
+            weight, pages, format_id, status_id
+        ) VALUES (
+            :alias_set_id, :identifier_set_id, :annotation_id,
+            :disambiguation_id, :publication_bbid, :width, :height,
+            :depth, :weight, :pages, :format_id, :status_id
+        ) RETURNING id''', {
+            'alias_set_id': alias_set_id,
+            'identifier_set_id': identifier_set_id,
+            'annotation_id': data.annotation_id,
+            'disambiguation_id': data.disambiguation_id,
+            'publication_bbid': data.publication_gid,
+            'width': data.width,
+            'height': data.height,
+            'depth': data.depth,
+            'weight': data.weight,
+            'pages': data.pages,
+            'format_id': data.edition_format_id,
+            'status_id': data.edition_status_id
+        }
+    )
+    data_id = result.fetchone()[0]
+
+    # Create a release event if release date is not NULL
+    if data.release_date is not None:
+        release_year, release_month, release_day = \
+            convert_date(data.release_date, data.release_date_precision)
+        result = session.execute(
+            '''INSERT INTO _bookbrainz.release_event (
+                "year", "month", "day"
+            ) VALUES (
+                :year, :month, :day
+            ) RETURNING id
+            ''', {
+                'year': release_year,
+                'month': release_month,
+                'day': release_day
+            }
+        )
+
+        release_event_id = result.fetchone()[0]
+        session.execute(
+            '''INSERT INTO _bookbrainz.release_event__edition_data (
+                release_event_id, edition_data_id
+            ) VALUES (
+                :event_id, :data_id
+            )
+            ''', {
+                'event_id': release_event_id,
+                'data_id': data_id
+            }
+        )
+
+    if data.language_id is not None:
+        session.execute(
+            '''INSERT INTO _bookbrainz.edition_data__language (
+                data_id, language_id
+            ) VALUES (
+                :data_id, :language_id
+            )
+            ''', {
+                'data_id': data_id,
+                'language_id': data.language_id
+            }
+        )
+
+    if data.publisher_gid is not None:
+        session.execute(
+            '''INSERT INTO _bookbrainz.edition_data__publisher (
+                data_id, publisher_bbid
+            ) VALUES (
+                :data_id, :publisher_bbid
+            )
+            ''', {
+                'data_id': data_id,
+                'publisher_bbid': data.publisher_gid
+            }
+        )
+
+    session.execute(
+        '''INSERT INTO _bookbrainz.edition_revision (
+            id, bbid, data_id
+        ) VALUES (
+            :id, :bbid, :data_id
+        )''', {
+            'id': revision.revision_id,
+            'bbid': entity.entity_gid,
+            'data_id': data_id
+        }
+    )
+
+
+def insert_work_data_and_revision(session, entity, revision, alias_set_id,
+                                  identifier_set_id):
+    data = revision.entity_data
+
+    result = session.execute(
+        '''INSERT INTO _bookbrainz.work_data (
+            alias_set_id, identifier_set_id, annotation_id,
+            disambiguation_id, type_id
+        ) VALUES (
+            :alias_set_id, :identifier_set_id, :annotation_id,
+            :disambiguation_id, :type_id
+        ) RETURNING id''', {
+            'alias_set_id': alias_set_id,
+            'identifier_set_id': identifier_set_id,
+            'annotation_id': data.annotation_id,
+            'disambiguation_id': data.disambiguation_id,
+            'type_id': data.work_type_id
+        }
+    )
+    data_id = result.fetchone()[0]
+
+    # Create a release event if release date is not NULL
+    for language in data.languages:
+        session.execute(
+            '''INSERT INTO _bookbrainz.work_data__language (
+                data_id, language_id
+            ) VALUES (
+                :data_id, :language_id
+            )
+            ''', {
+                'data_id': data_id,
+                'language_id': language.id
+            }
+        )
+
+    session.execute(
+        '''INSERT INTO _bookbrainz.work_revision (
+            id, bbid, data_id
+        ) VALUES (
+            :id, :bbid, :data_id
+        )''', {
+            'id': revision.revision_id,
+            'bbid': entity.entity_gid,
+            'data_id': data_id
+        }
+    )
+
+
+def insert_publisher_data_and_revision(session, entity, revision, alias_set_id,
+                                       identifier_set_id):
+    data = revision.entity_data
+    begin_year, begin_month, begin_day = \
+        convert_date(data.begin_date, data.begin_date_precision)
+    end_year, end_month, end_day = \
+        convert_date(data.end_date, data.end_date_precision)
+
+    result = session.execute(
+        '''INSERT INTO _bookbrainz.publisher_data (
+            alias_set_id, identifier_set_id, annotation_id, disambiguation_id,
+            begin_year, begin_month, begin_day, end_year, end_month, end_day,
+            ended, type_id
+        ) VALUES (
+            :alias_set_id, :identifier_set_id, :annotation_id,
+            :disambiguation_id, :begin_year, :begin_month, :begin_day,
+            :end_year, :end_month, :end_day, :ended, :type_id
+        ) RETURNING id''', {
+            'alias_set_id': alias_set_id,
+            'identifier_set_id': identifier_set_id,
+            'annotation_id': data.annotation_id,
+            'disambiguation_id': data.disambiguation_id,
+            'begin_year': begin_year,
+            'begin_month': begin_month,
+            'begin_day': begin_day,
+            'end_year': end_year,
+            'end_month': end_month,
+            'end_day': end_day,
+            'ended': data.ended,
+            'type_id': data.publisher_type_id
+        }
+    )
+    data_id = result.fetchone()[0]
+
+    session.execute(
+        '''INSERT INTO _bookbrainz.publisher_revision (
+            id, bbid, data_id
+        ) VALUES (
+            :id, :bbid, :data_id
+        )''', {
+            'id': revision.revision_id,
+            'bbid': entity.entity_gid,
+            'data_id': data_id
+        }
+    )
+
+
+
+def insert_publication_data_and_revision(session, entity, revision,
+                                         alias_set_id, identifier_set_id):
+    data = revision.entity_data
+
+    result = session.execute(
+        '''INSERT INTO _bookbrainz.publication_data (
+            alias_set_id, identifier_set_id, annotation_id, disambiguation_id,
+            type_id
+        ) VALUES (
+            :alias_set_id, :identifier_set_id, :annotation_id,
+            :disambiguation_id, :type_id
+        ) RETURNING id''', {
+            'alias_set_id': alias_set_id,
+            'identifier_set_id': identifier_set_id,
+            'annotation_id': data.annotation_id,
+            'disambiguation_id': data.disambiguation_id,
+            'type_id': data.publication_type_id
+        }
+    )
+    data_id = result.fetchone()[0]
+
+    session.execute(
+        '''INSERT INTO _bookbrainz.publication_revision (
+            id, bbid, data_id
+        ) VALUES (
+            :id, :bbid, :data_id
+        )''', {
+            'id': revision.revision_id,
+            'bbid': entity.entity_gid,
+            'data_id': data_id
+        }
+    )
+
+def migrate_entities(session):
+    session.execute("""
+        INSERT INTO _bookbrainz.entity (
+            bbid, type
+        ) SELECT
+            entity_gid, _type::text::_bookbrainz.entity_type
+        FROM bookbrainz.entity
+    """)
+
+    # Leave master_revision_id NULL for now - they don't exist yet
+    session.execute("""
+        INSERT INTO _bookbrainz.creator_header (
+            bbid
+        ) SELECT
+            entity_gid
+        FROM bookbrainz.entity
+        WHERE _type = 'Creator'
+    """)
+
+    session.execute("""
+        INSERT INTO _bookbrainz.edition_header (
+            bbid
+        ) SELECT
+            entity_gid
+        FROM bookbrainz.entity
+        WHERE _type = 'Edition'
+    """)
+
+    session.execute("""
+        INSERT INTO _bookbrainz.publication_header (
+            bbid
+        ) SELECT
+            entity_gid
+        FROM bookbrainz.entity
+        WHERE _type = 'Publication'
+    """)
+
+    session.execute("""
+        INSERT INTO _bookbrainz.publisher_header (
+            bbid
+        ) SELECT
+            entity_gid
+        FROM bookbrainz.entity
+        WHERE _type = 'Publisher'
+    """)
+
+    session.execute("""
+        INSERT INTO _bookbrainz.work_header (
+            bbid
+        ) SELECT
+            entity_gid
+        FROM bookbrainz.entity
+        WHERE _type = 'Work'
+    """)
+
 def migrate_entity_data(session):
     session.execute("""
         INSERT INTO _bookbrainz.annotation (
@@ -189,7 +532,7 @@ def migrate_entity_data(session):
         LEFT JOIN bookbrainz.annotation a
             ON ed.annotation_id = a.annotation_id
         WHERE a.annotation_id IS NOT NULL
-        ORDER BY a.annotation_id, revision_id;
+        ORDER BY a.annotation_id, revision_id
     """)
 
     session.execute("""
@@ -197,7 +540,23 @@ def migrate_entity_data(session):
             id, comment
         ) SELECT
             disambiguation_id, COALESCE(comment, ''::text)
-        FROM bookbrainz.disambiguation;
+        FROM bookbrainz.disambiguation
+    """)
+
+    session.execute("""
+        INSERT INTO _bookbrainz.alias (
+            id, name, sort_name, language_id, "primary"
+        ) SELECT
+            alias_id, name, sort_name, language_id, "primary"
+        FROM bookbrainz.alias
+    """)
+
+    session.execute("""
+        INSERT INTO _bookbrainz.identifier (
+            id, type_id, value
+        ) SELECT
+            identifier_id, identifier_type_id, value
+        FROM bookbrainz.identifier
     """)
 
     # For each entity, go through all the entity and relationship revisions
@@ -231,14 +590,72 @@ def migrate_entity_data(session):
             if isinstance(revision, EntityRevision):
                 aliases = revision.entity_data.aliases
                 identifiers = revision.entity_data.identifiers
-                print(aliases)
-                print(identifiers)
-                print(relationships)
-            else:
-                relationships.append(revision.relationship)
-                print(aliases)
-                print(identifiers)
-                print(relationships)
+                default_alias = revision.entity_data.default_alias
+
+                # Create alias set
+                result = session.execute('''INSERT INTO _bookbrainz.alias_set (
+                        default_alias_id
+                    ) VALUES (
+                        :default_id
+                    ) RETURNING id
+                ''', {"default_id": default_alias.alias_id if default_alias is not None else None})
+                alias_set_id = result.fetchone()[0]
+
+                for alias in aliases:
+                    session.execute('''INSERT INTO _bookbrainz.alias_set__alias (
+                            set_id, alias_id
+                        ) VALUES (
+                            :set_id, :alias_id
+                        )
+                    ''', {"set_id": alias_set_id, "alias_id": alias.alias_id})
+
+
+                # Create identifier set
+                result = session.execute('''INSERT INTO _bookbrainz.identifier_set
+                    DEFAULT VALUES RETURNING id
+                ''')
+                identifier_set_id = result.fetchone()[0]
+
+                # Add identifiers to set
+                for identifier in identifiers:
+                    session.execute('''INSERT INTO _bookbrainz.identifier_set__identifier (
+                            set_id, identifier_id
+                        ) VALUES (
+                            :set_id, :identifier_id
+                        )
+                    ''', {"set_id": identifier_set_id, "identifier_id": identifier.identifier_id})
+
+                # Create entity data
+                if isinstance(revision.entity_data, CreatorData):
+                    insert_creator_data_and_revision(
+                        session, entity, revision, alias_set_id,
+                        identifier_set_id
+                    )
+                elif isinstance(revision.entity_data, EditionData):
+                    insert_edition_data_and_revision(
+                        session, entity, revision, alias_set_id,
+                        identifier_set_id
+                    )
+                elif isinstance(revision.entity_data, WorkData):
+                    insert_work_data_and_revision(
+                        session, entity, revision, alias_set_id,
+                        identifier_set_id
+                    )
+                elif isinstance(revision.entity_data, PublisherData):
+                    insert_publisher_data_and_revision(
+                        session, entity, revision, alias_set_id,
+                        identifier_set_id
+                    )
+                elif isinstance(revision.entity_data, PublicationData):
+                    insert_publication_data_and_revision(
+                        session, entity, revision, alias_set_id,
+                        identifier_set_id
+                    )
+                else:
+                    raise Error('Err... what?')
+
+                # Create revision
+
         # Also need to make a new entity data row for each relationship
         # revision
 
@@ -272,6 +689,7 @@ def migrate(username, database, password, **kwargs):
     migrate_types(session)
     migrate_editors(session)
     migrate_revisions(session)
+    migrate_entities(session)
     migrate_entity_data(session)
 
     session.rollback()
