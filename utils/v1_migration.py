@@ -187,9 +187,9 @@ def convert_date(date, precision):
             return (date.year, None, None)
 
 
-def insert_creator_data_and_revision(session, entity, revision, alias_set_id,
-                                     identifier_set_id):
-    data = revision.entity_data
+def insert_creator_data_and_revision(session, entity, revision, data,
+                                     alias_set_id, identifier_set_id,
+                                     relationship_set_id):
     begin_year, begin_month, begin_day = \
         convert_date(data.begin_date, data.begin_date_precision)
     end_year, end_month, end_day = \
@@ -197,16 +197,18 @@ def insert_creator_data_and_revision(session, entity, revision, alias_set_id,
 
     result = session.execute(
         '''INSERT INTO _bookbrainz.creator_data (
-            alias_set_id, identifier_set_id, annotation_id,
-            disambiguation_id, begin_year, begin_month, begin_day, end_year,
-            end_month, end_day, ended, gender_id, type_id
+            alias_set_id, identifier_set_id, relationship_set_id,
+            annotation_id, disambiguation_id, begin_year, begin_month,
+            begin_day, end_year, end_month, end_day, ended, gender_id, type_id
         ) VALUES (
-            :alias_set_id, :identifier_set_id, :annotation_id,
-            :disambiguation_id,  :begin_year, :begin_month, :begin_day,
-            :end_year, :end_month, :end_day, :ended, :gender_id, :type_id
+            :alias_set_id, :identifier_set_id, :relationship_set_id,
+            :annotation_id, :disambiguation_id,  :begin_year, :begin_month,
+            :begin_day, :end_year, :end_month, :end_day, :ended, :gender_id,
+            :type_id
         ) RETURNING id''', {
             'alias_set_id': alias_set_id,
             'identifier_set_id': identifier_set_id,
+            'relationship_set_id': relationship_set_id,
             'annotation_id': data.annotation_id,
             'disambiguation_id': data.disambiguation_id,
             'begin_year': begin_year,
@@ -235,22 +237,22 @@ def insert_creator_data_and_revision(session, entity, revision, alias_set_id,
     )
 
 
-def insert_edition_data_and_revision(session, entity, revision, alias_set_id,
-                                     identifier_set_id):
-    data = revision.entity_data
-
+def insert_edition_data_and_revision(session, entity, revision, data,
+                                     alias_set_id, identifier_set_id,
+                                     relationship_set_id):
     result = session.execute(
         '''INSERT INTO _bookbrainz.edition_data (
-            alias_set_id, identifier_set_id, annotation_id,
-            disambiguation_id, publication_bbid, width, height, depth,
-            weight, pages, format_id, status_id
+            alias_set_id, identifier_set_id, relationship_set_id,
+            annotation_id, disambiguation_id, publication_bbid, width, height,
+            depth, weight, pages, format_id, status_id
         ) VALUES (
-            :alias_set_id, :identifier_set_id, :annotation_id,
-            :disambiguation_id, :publication_bbid, :width, :height,
-            :depth, :weight, :pages, :format_id, :status_id
+            :alias_set_id, :identifier_set_id, :relationship_set_id,
+            :annotation_id, :disambiguation_id, :publication_bbid, :width,
+            :height, :depth, :weight, :pages, :format_id, :status_id
         ) RETURNING id''', {
             'alias_set_id': alias_set_id,
             'identifier_set_id': identifier_set_id,
+            'relationship_set_id': relationship_set_id,
             'annotation_id': data.annotation_id,
             'disambiguation_id': data.disambiguation_id,
             'publication_bbid': data.publication_gid,
@@ -334,20 +336,20 @@ def insert_edition_data_and_revision(session, entity, revision, alias_set_id,
     )
 
 
-def insert_work_data_and_revision(session, entity, revision, alias_set_id,
-                                  identifier_set_id):
-    data = revision.entity_data
-
+def insert_work_data_and_revision(session, entity, revision, data,
+                                  alias_set_id, identifier_set_id,
+                                  relationship_set_id):
     result = session.execute(
         '''INSERT INTO _bookbrainz.work_data (
-            alias_set_id, identifier_set_id, annotation_id,
-            disambiguation_id, type_id
+            alias_set_id, identifier_set_id, relationship_set_id,
+            annotation_id, disambiguation_id, type_id
         ) VALUES (
-            :alias_set_id, :identifier_set_id, :annotation_id,
-            :disambiguation_id, :type_id
+            :alias_set_id, :identifier_set_id, :relationship_set_id,
+            :annotation_id, :disambiguation_id, :type_id
         ) RETURNING id''', {
             'alias_set_id': alias_set_id,
             'identifier_set_id': identifier_set_id,
+            'relationship_set_id': relationship_set_id,
             'annotation_id': data.annotation_id,
             'disambiguation_id': data.disambiguation_id,
             'type_id': data.work_type_id
@@ -382,9 +384,9 @@ def insert_work_data_and_revision(session, entity, revision, alias_set_id,
     )
 
 
-def insert_publisher_data_and_revision(session, entity, revision, alias_set_id,
-                                       identifier_set_id):
-    data = revision.entity_data
+def insert_publisher_data_and_revision(session, entity, revision, data,
+                                       alias_set_id, identifier_set_id,
+                                       relationship_set_id):
     begin_year, begin_month, begin_day = \
         convert_date(data.begin_date, data.begin_date_precision)
     end_year, end_month, end_day = \
@@ -392,16 +394,17 @@ def insert_publisher_data_and_revision(session, entity, revision, alias_set_id,
 
     result = session.execute(
         '''INSERT INTO _bookbrainz.publisher_data (
-            alias_set_id, identifier_set_id, annotation_id, disambiguation_id,
-            begin_year, begin_month, begin_day, end_year, end_month, end_day,
-            ended, type_id
+            alias_set_id, identifier_set_id, relationship_set_id,
+            annotation_id, disambiguation_id, begin_year, begin_month,
+            begin_day, end_year, end_month, end_day, ended, type_id
         ) VALUES (
-            :alias_set_id, :identifier_set_id, :annotation_id,
-            :disambiguation_id, :begin_year, :begin_month, :begin_day,
-            :end_year, :end_month, :end_day, :ended, :type_id
+            :alias_set_id, :identifier_set_id, :relationship_set_id,
+            :annotation_id, :disambiguation_id, :begin_year, :begin_month,
+            :begin_day, :end_year, :end_month, :end_day, :ended, :type_id
         ) RETURNING id''', {
             'alias_set_id': alias_set_id,
             'identifier_set_id': identifier_set_id,
+            'relationship_set_id': relationship_set_id,
             'annotation_id': data.annotation_id,
             'disambiguation_id': data.disambiguation_id,
             'begin_year': begin_year,
@@ -429,21 +432,20 @@ def insert_publisher_data_and_revision(session, entity, revision, alias_set_id,
     )
 
 
-
-def insert_publication_data_and_revision(session, entity, revision,
-                                         alias_set_id, identifier_set_id):
-    data = revision.entity_data
-
+def insert_publication_data_and_revision(session, entity, revision, data,
+                                         alias_set_id, identifier_set_id,
+                                         relationship_set_id):
     result = session.execute(
         '''INSERT INTO _bookbrainz.publication_data (
-            alias_set_id, identifier_set_id, annotation_id, disambiguation_id,
-            type_id
+            alias_set_id, identifier_set_id, relationship_set_id,
+            annotation_id, disambiguation_id, type_id
         ) VALUES (
-            :alias_set_id, :identifier_set_id, :annotation_id,
-            :disambiguation_id, :type_id
+            :alias_set_id, :identifier_set_id, :relationship_set_id,
+            :annotation_id, :disambiguation_id, :type_id
         ) RETURNING id''', {
             'alias_set_id': alias_set_id,
             'identifier_set_id': identifier_set_id,
+            'relationship_set_id': relationship_set_id,
             'annotation_id': data.annotation_id,
             'disambiguation_id': data.disambiguation_id,
             'type_id': data.publication_type_id
@@ -462,6 +464,7 @@ def insert_publication_data_and_revision(session, entity, revision,
             'data_id': data_id
         }
     )
+
 
 def migrate_entities(session):
     session.execute("""
@@ -518,6 +521,7 @@ def migrate_entities(session):
         WHERE _type = 'Work'
     """)
 
+
 def migrate_entity_data(session):
     session.execute("""
         INSERT INTO _bookbrainz.annotation (
@@ -565,6 +569,18 @@ def migrate_entity_data(session):
     # For each entity revision, create a new alias set, identifier_set and
     # relationship set, using the tracked aliases, identifier and
     # relationships
+    EMPTY_RELATIONSHIP_SET = session.execute(
+        'INSERT INTO _bookbrainz.relationship_set DEFAULT VALUES RETURNING id'
+    ).fetchone()[0]
+
+    EMPTY_ALIAS_SET = session.execute(
+        'INSERT INTO _bookbrainz.alias_set DEFAULT VALUES RETURNING id'
+    ).fetchone()[0]
+
+    EMPTY_IDENTIFIER_SET = session.execute(
+        'INSERT INTO _bookbrainz.identifier_set DEFAULT VALUES RETURNING id'
+    ).fetchone()[0]
+
     entity_query = session.query(Entity)
     for entity in limit_query(entity_query, 100):
         print(entity)
@@ -582,9 +598,12 @@ def migrate_entity_data(session):
 
         all_revisions = sorted(all_revisions, key=lambda x: x.created_at)
 
-        relationships = []
+        relationship_set_id = EMPTY_RELATIONSHIP_SET
         aliases = []
+        alias_set_id = EMPTY_ALIAS_SET
         identifiers = []
+        identifier_set_id = EMPTY_IDENTIFIER_SET
+        data = None
         for revision in all_revisions:
             print('r{}'.format(revision.revision_id))
             if isinstance(revision, EntityRevision):
@@ -593,71 +612,153 @@ def migrate_entity_data(session):
                 default_alias = revision.entity_data.default_alias
 
                 # Create alias set
-                result = session.execute('''INSERT INTO _bookbrainz.alias_set (
-                        default_alias_id
-                    ) VALUES (
-                        :default_id
-                    ) RETURNING id
-                ''', {"default_id": default_alias.alias_id if default_alias is not None else None})
-                alias_set_id = result.fetchone()[0]
-
-                for alias in aliases:
-                    session.execute('''INSERT INTO _bookbrainz.alias_set__alias (
-                            set_id, alias_id
+                if aliases:
+                    result = session.execute('''
+                        INSERT INTO _bookbrainz.alias_set (
+                            default_alias_id
                         ) VALUES (
-                            :set_id, :alias_id
-                        )
-                    ''', {"set_id": alias_set_id, "alias_id": alias.alias_id})
+                            :default_id
+                        ) RETURNING id
+                    ''', {
+                        "default_id":
+                            default_alias.alias_id
+                            if default_alias is not None else None
+                    })
+                    alias_set_id = result.fetchone()[0]
 
+                    for alias in aliases:
+                        session.execute('''
+                            INSERT INTO _bookbrainz.alias_set__alias (
+                                set_id, alias_id
+                            ) VALUES (
+                                :set_id, :alias_id
+                            )
+                        ''', {
+                            "set_id": alias_set_id,
+                            "alias_id": alias.alias_id
+                        })
+                else:
+                    alias_set_id = EMPTY_ALIAS_SET
 
                 # Create identifier set
-                result = session.execute('''INSERT INTO _bookbrainz.identifier_set
+                if identifiers:
+                    result = session.execute('''INSERT INTO _bookbrainz.identifier_set
+                        DEFAULT VALUES RETURNING id
+                    ''')
+                    identifier_set_id = result.fetchone()[0]
+
+                    # Add identifiers to set
+                    for identifier in identifiers:
+                        session.execute('''
+                            INSERT INTO
+                            _bookbrainz.identifier_set__identifier (
+                                set_id, identifier_id
+                            ) VALUES (
+                                :set_id, :identifier_id
+                            )
+                        ''', {
+                            "set_id": identifier_set_id,
+                            "identifier_id": identifier.identifier_id
+                        })
+                else:
+                    identifier_set_id = EMPTY_IDENTIFIER_SET
+
+                data = revision.entity_data
+            else:
+                # All relationship revisions add a relationship
+                rel_data = revision.relationship_data
+
+                # Create new relationship set
+                source = [e for e in rel_data.entities if e.position == 0][0]
+                target = [e for e in rel_data.entities if e.position == 1][0]
+
+                # Find or create relationship
+                result = session.execute(
+                    'SELECT id FROM _bookbrainz.relationship WHERE id = :id',
+                    {'id': rel_data.relationship_data_id}
+                ).fetchone()
+                if result is None:
+                    session.execute('''INSERT INTO _bookbrainz.relationship (
+                            id, type_id, source_bbid, target_bbid
+                        ) VALUES (
+                            :id, :type_id, :source_bbid, :target_bbid
+                        )
+                    ''', {
+                        "id": rel_data.relationship_data_id,
+                        "type_id": rel_data.relationship_type_id,
+                        "source_bbid": source.entity_gid,
+                        "target_bbid": target.entity_gid
+                    })
+
+                # Create relationship_set
+                result = session.execute('''
+                    INSERT INTO _bookbrainz.relationship_set
                     DEFAULT VALUES RETURNING id
                 ''')
-                identifier_set_id = result.fetchone()[0]
+                new_relationship_set_id = result.fetchone()[0]
 
-                # Add identifiers to set
-                for identifier in identifiers:
-                    session.execute('''INSERT INTO _bookbrainz.identifier_set__identifier (
-                            set_id, identifier_id
-                        ) VALUES (
-                            :set_id, :identifier_id
-                        )
-                    ''', {"set_id": identifier_set_id, "identifier_id": identifier.identifier_id})
+                # Link previous relationships to new relationship set
+                if relationship_set_id is not None:
+                    session.execute('''
+                        INSERT INTO
+                        _bookbrainz.relationship_set__relationship (
+                            set_id, relationship_id
+                        ) SELECT
+                            :new_set_id, relationship_id
+                        FROM _bookbrainz.relationship_set__relationship
+                        WHERE set_id = :set_id
+                    ''', {
+                        'set_id': relationship_set_id,
+                        'new_set_id': new_relationship_set_id
+                    })
 
-                # Create entity data
-                if isinstance(revision.entity_data, CreatorData):
-                    insert_creator_data_and_revision(
-                        session, entity, revision, alias_set_id,
-                        identifier_set_id
+                # Add new relationship to the set
+                session.execute('''
+                    INSERT INTO _bookbrainz.relationship_set__relationship (
+                        set_id, relationship_id
+                    ) VALUES (
+                        :set_id, :relationship_id
                     )
-                elif isinstance(revision.entity_data, EditionData):
-                    insert_edition_data_and_revision(
-                        session, entity, revision, alias_set_id,
-                        identifier_set_id
-                    )
-                elif isinstance(revision.entity_data, WorkData):
-                    insert_work_data_and_revision(
-                        session, entity, revision, alias_set_id,
-                        identifier_set_id
-                    )
-                elif isinstance(revision.entity_data, PublisherData):
-                    insert_publisher_data_and_revision(
-                        session, entity, revision, alias_set_id,
-                        identifier_set_id
-                    )
-                elif isinstance(revision.entity_data, PublicationData):
-                    insert_publication_data_and_revision(
-                        session, entity, revision, alias_set_id,
-                        identifier_set_id
-                    )
-                else:
-                    raise Error('Err... what?')
+                ''', {
+                    'set_id': new_relationship_set_id,
+                    'relationship_id': rel_data.relationship_data_id
+                })
 
-                # Create revision
+                # Set current relationship_set_id to the new one
+                relationship_set_id = new_relationship_set_id
 
-        # Also need to make a new entity data row for each relationship
-        # revision
+            if data is None:
+                raise Exception("Data shouldn't be None here")
+
+            # Create entity data
+            if isinstance(entity, Creator):
+                insert_creator_data_and_revision(
+                    session, entity, revision, data, alias_set_id,
+                    identifier_set_id, relationship_set_id
+                )
+            elif isinstance(entity, Edition):
+                insert_edition_data_and_revision(
+                    session, entity, revision, data, alias_set_id,
+                    identifier_set_id, relationship_set_id
+                )
+            elif isinstance(entity, Work):
+                insert_work_data_and_revision(
+                    session, entity, revision, data, alias_set_id,
+                    identifier_set_id, relationship_set_id
+                )
+            elif isinstance(entity, Publisher):
+                insert_publisher_data_and_revision(
+                    session, entity, revision, data, alias_set_id,
+                    identifier_set_id, relationship_set_id
+                )
+            elif isinstance(entity, Publication):
+                insert_publication_data_and_revision(
+                    session, entity, revision, data, alias_set_id,
+                    identifier_set_id, relationship_set_id
+                )
+            else:
+                raise Exception('Err... what?')
+
 
 @click.command()
 @click.argument('username')
