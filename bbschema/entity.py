@@ -347,7 +347,7 @@ class Identifier(Base):
         if 'identifier_type' in identifier_json:
             new.identifier_type_id =\
                 identifier_json.get('identifier_type').\
-                get('identifier_type_id', None)
+                get('identifier_type_id')
 
         return new
 
