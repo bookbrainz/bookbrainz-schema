@@ -343,10 +343,10 @@ class Identifier(Base):
 
         if 'value' in identifier_json:
             new.value = identifier_json['value']
-        if 'identifier_type_id' in identifier_json:
+
+        if 'identifier_type' in identifier_json:
             new.identifier_type_id =\
-                identifier_json.get('identifier_type', {}).\
-                get('identifier_type_id')
+                identifier_json['identifier_type'].get('identifier_type_id')
 
         return new
 
