@@ -22,6 +22,26 @@ Then, run setup.py, to install the bbschema package:
 
 You'll probably need to prefix these commands with "sudo" to get anywhere!
 
+Importing Dumps
+---------------
+
+''Creating the Schema''
+The first step in importing the BookBrainz dumps is to run the schema
+creation script. This can be downloaded from the same location as the dumps.
+This will create the necessary schemas and tables within a database you've
+previously created.
+
+Subsequently, download the data dumps, and import them using the
+utils/import.py script. This script has a built-in help command. An example
+usage of the script is:
+
+    python import.py bookbrainz bookbrainz --source=<core_dump> --source=<derived_dump> --source=<editor_dump>
+
+Note - at this stage, all three dumps must be provided to the import script.
+After running this command, all the data will have been imported, and you should
+be able to run queries against it and start an instance of the BookBrainz
+web service.
+
 Testing
 -------
 

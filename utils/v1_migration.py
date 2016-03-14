@@ -835,7 +835,7 @@ def migrate(username, database, password, **kwargs):
     migrate_entities(session)
     migrate_entity_data(session)
 
-    session.rollback()
+    session.commit()
 
 if __name__ == "__main__":
     migrate()
