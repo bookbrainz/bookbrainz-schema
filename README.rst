@@ -29,7 +29,11 @@ Importing Dumps
 The first step in importing the BookBrainz dumps is to run the schema
 creation script. This can be downloaded from the same location as the dumps.
 This will create the necessary schemas and tables within a database you've
-previously created.
+previously created. The commands to do this will be similar to the following
+(with the necessary replacements):
+
+    psql -U <pg_username> <bb_db> -c 'CREATE EXTENSION "uuid-ossp" SCHEMA public'
+    psql -U <pg_username> <bb_db> -f <bbdump-structure download location>
 
 Subsequently, download the data dumps, and import them using the
 utils/import.py script. This script has a built-in help command. An example
