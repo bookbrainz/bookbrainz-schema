@@ -33,13 +33,14 @@ previously created. The commands to do this will be similar to the following
 (with the necessary replacements):
 
     psql -U <pg_username> <bb_db> -c 'CREATE EXTENSION "uuid-ossp" SCHEMA public'
+
     psql -U <pg_username> <bb_db> -f <bbdump-structure download location>
 
 Subsequently, download the data dumps, and import them using the
 utils/import.py script. This script has a built-in help command. An example
 usage of the script is:
 
-    python import.py bookbrainz bookbrainz --source=<core_dump> --source=<derived_dump> --source=<editor_dump>
+    python import.py <pg_username> <bb_db> --source=<core_dump> --source=<derived_dump> --source=<editor_dump>
 
 Note - at this stage, all three dumps must be provided to the import script.
 After running this command, all the data will have been imported, and you should
