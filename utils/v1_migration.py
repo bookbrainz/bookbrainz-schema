@@ -282,7 +282,7 @@ def insert_edition_data_and_revision(session, entity, revision, data,
 
             release_event_id = result.fetchone()[0]
             session.execute(
-                '''INSERT INTO _bookbrainz.release_event__edition_data (
+                '''INSERT INTO _bookbrainz.edition_data__release_event (
                     release_event_id, edition_data_id
                 ) VALUES (
                     :event_id, :data_id
