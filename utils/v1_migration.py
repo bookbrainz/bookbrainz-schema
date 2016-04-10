@@ -591,10 +591,6 @@ def migrate_entity_data(session):
         'INSERT INTO _bookbrainz.alias_set DEFAULT VALUES RETURNING id'
     ).fetchone()[0]
 
-    EMPTY_IDENTIFIER_SET = session.execute(
-        'INSERT INTO _bookbrainz.identifier_set DEFAULT VALUES RETURNING id'
-    ).fetchone()[0]
-
     entity_query = session.query(Entity)
     processed_revisions = []
     for entity in limit_query(entity_query, 100):
@@ -617,7 +613,7 @@ def migrate_entity_data(session):
         aliases = []
         alias_set_id = EMPTY_ALIAS_SET
         identifiers = []
-        identifier_set_id = EMPTY_IDENTIFIER_SET
+        identifier_set_id = None
         data = None
         previous_revision = None
         for revision in all_revisions:
@@ -659,6 +655,10 @@ def migrate_entity_data(session):
 
                     # Create identifier set
                     if identifiers:
+                        EMPTY_IDENTIFIER_SET = session.execute(
+                            'INSERT INTO _bookbrainz.identifier_set DEFAULT VALUES RETURNING id'
+                        ).fetchone()[0]
+
                         result = session.execute('''INSERT INTO _bookbrainz.identifier_set
                             DEFAULT VALUES RETURNING id
                         ''')
@@ -677,8 +677,6 @@ def migrate_entity_data(session):
                                 "set_id": identifier_set_id,
                                 "identifier_id": identifier.identifier_id
                             })
-                    else:
-                        identifier_set_id = EMPTY_IDENTIFIER_SET
 
                 data = revision.entity_data
             else:
