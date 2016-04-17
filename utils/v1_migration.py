@@ -136,15 +136,10 @@ def migrate_editors(session):
 def migrate_revisions(session):
     session.execute("""
         INSERT INTO _bookbrainz.revision (
-            id, author_id, created_at, type
+            id, author_id, created_at
         ) SELECT
-            r.revision_id, r.user_id, r.created_at,
-            e._type::text::_bookbrainz.entity_type
-        FROM bookbrainz.revision r
-        LEFT JOIN bookbrainz.entity_revision er
-            ON r.revision_id = er.revision_id
-        LEFT JOIN bookbrainz.entity e
-            ON e.entity_gid = er.entity_gid;
+            r.revision_id, r.user_id, r.created_at
+        FROM bookbrainz.revision r;
     """)
 
     session.execute("""
